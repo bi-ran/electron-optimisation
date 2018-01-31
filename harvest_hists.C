@@ -23,7 +23,7 @@
 
 void set_ratio_style(TH1D* h);
 
-int harvest_hists(const char* config, const char* label) {
+int harvest_hists(const char* label, const char* config) {
    configurer* conf = new configurer(config);
 
    auto files = conf->get<std::vector<std::string>>("files");
@@ -189,10 +189,11 @@ void set_ratio_style(TH1D* h) {
 }
 
 int main(int argc, char* argv[]) {
-   if (argc == 3) {
-      return harvest_hists(argv[1], argv[2]);
+   if (argc > 2) {
+      for (int f = 2; f < argc; ++f)
+         harvest_hists(argv[1], argv[f]);
    } else {
-      printf("usage: ./harvest_hists [config] [label]\n");
+      printf("usage: ./harvest_hists [label] [configs ...]\n");
       return 1;
    }
 }
