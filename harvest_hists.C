@@ -133,7 +133,8 @@ int harvest_hists(const char* label, const char* config) {
 
    if (logscale) { gPad->SetLogy(); }
 
-   TLegend* l1 = new TLegend(0.6, 0.625, 0.96, 0.825);
+   float lmaxy = 0.835; float lminy = lmaxy - 0.03 * (legends.size() + headers.size());
+   TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
    lstyle(l1, 43, 14);
 
    h[0]->Draw("axis");
