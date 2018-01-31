@@ -9,6 +9,7 @@
 
 #define BRANCHES(ACTION)                              \
    VARBRANCHES(ACTION)                                \
+   NEWVARBRANCHES(ACTION)                             \
    VECBRANCHES(ACTION)                                \
    NEWVECBRANCHES(ACTION)                             \
 
@@ -20,6 +21,9 @@
    ACTION(Int_t, nPUInfo)                             \
    ACTION(Int_t, nMC)                                 \
    ACTION(Int_t, nEle)                                \
+
+#define NEWVARBRANCHES(ACTION)                        \
+   ACTION(int, hiBin)                                 \
 
 #define VECBRANCHES(ACTION)                           \
    ACTION(std::vector<int>, nPU)                      \

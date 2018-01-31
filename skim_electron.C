@@ -17,6 +17,10 @@ int skim_electron(const char* input, const char* output) {
    TTree* tin = (TTree*)fin->Get("ggHiNtuplizerGED/EventTree");
    tin->SetBranchStatus("*", 0);
 
+   TTree* tevt = (TTree*)fin->Get("hiEvtAnalyzer/HiTree");
+   tevt->SetBranchStatus("*", 0); tevt->SetBranchStatus("hiBin", 1);
+   int hiBin; tevt->SetBranchAddress("hiBin", &hiBin);
+
    eventtree* evtt = new eventtree(tin);
 
    TFile* fout = new TFile(output, "recreate");
@@ -32,6 +36,7 @@ int skim_electron(const char* input, const char* output) {
       elet->clear();
 
       tin->GetEntry(i);
+      tevt->GetEntry(i);
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
       elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
@@ -61,6 +66,7 @@ int skim_electron(const char* input, const char* output) {
       }
 
       elet->copy(evtt);
+      elet->hiBin = hiBin;
 
       tout->Fill();
    }
