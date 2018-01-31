@@ -107,7 +107,8 @@ int harvest_hists(const char* label, const char* config) {
       switch (normalise) {
          case 0: break;
          case 1: h[j]->Scale(1. / h[j]->Integral()); break;
-         case 2: h[j]->Scale(1. / t[j]->GetEntries()); break;
+         case 2: h[j]->Scale(1. / h[j]->Integral(), "width"); break;
+         case 3: h[j]->Scale(1. / t[j]->GetEntries()); break;
          default: break;
       }
 
