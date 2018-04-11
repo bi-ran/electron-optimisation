@@ -23,7 +23,7 @@
 
 void set_ratio_style(TH1D* h);
 
-int harvest_hists(const char* label, const char* config) {
+int harvest_hists(const char* output, const char* config) {
    configurer* conf = new configurer(config);
 
    auto files = conf->get<std::vector<std::string>>("files");
@@ -100,6 +100,7 @@ int harvest_hists(const char* label, const char* config) {
          default:
             break;
       }
+
       if (!common.empty()) selections[j] += (" && " + common);
       t[j]->Draw(Form("%s>>hf%zu%s", vars[j].c_str(), j, tags[j].c_str()),
             selections[j].c_str(), "goff");
@@ -167,10 +168,10 @@ int harvest_hists(const char* label, const char* config) {
       }
    }
 
-   c1->SaveAs(Form("figs/%s-%s.png", filename.c_str(), label));
+   c1->SaveAs(Form("figs/%s-%s.png", filename.c_str(), output));
    delete c1;
 
-   TFile* fout = new TFile(Form("data/%s.root", label), "update");
+   TFile* fout = new TFile(Form("data/%s.root", output), "update");
    for (std::size_t j = 0; j < nfiles; ++j)
       h[j]->Write("", TObject::kOverwrite);
    fout->Close();
@@ -195,7 +196,7 @@ int main(int argc, char* argv[]) {
       for (int f = 2; f < argc; ++f)
          harvest_hists(argv[1], argv[f]);
    } else {
-      printf("usage: ./harvest_hists [label] [configs ...]\n");
+      printf("usage: ./harvest_hists [output] [configs ...]\n");
       return 1;
    }
 }
