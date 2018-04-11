@@ -1,8 +1,11 @@
 #include "TFile.h"
+#include "TChain.h"
 #include "TTree.h"
 
 #include "eventtree.h"
 #include "electrontree.h"
+
+#include "git/config/configurer.h"
 
 #define PI 3.141593f
 
@@ -12,16 +15,26 @@ inline float dphi_2s1f1b(float phi1, float phi2) {
    return dphi;
 }
 
-int skim_electron(const char* input, const char* output) {
-   TFile* fin = new TFile(input, "read");
-   TTree* tin = (TTree*)fin->Get("ggHiNtuplizerGED/EventTree");
-   tin->SetBranchStatus("*", 0);
+int skim_electron(const char* config, const char* output) {
+   configurer* conf = new configurer(config);
+   auto files = conf->get<std::vector<std::string>>("files");
 
-   TTree* tevt = (TTree*)fin->Get("hiEvtAnalyzer/HiTree");
-   tevt->SetBranchStatus("*", 0); tevt->SetBranchStatus("hiBin", 1);
-   int hiBin; tevt->SetBranchAddress("hiBin", &hiBin);
+   TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
+   TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
 
-   eventtree* evtt = new eventtree(tin);
+   for (const auto& file : files) {
+      ceg->Add(file.data());
+      cevt->Add(file.data());
+   }
+
+   ceg->SetBranchStatus("*", 0);
+   cevt->SetBranchStatus("*", 0);
+
+   int hiBin;
+   cevt->SetBranchStatus("hiBin", 1);
+   cevt->SetBranchAddress("hiBin", &hiBin);
+
+   eventtree* evtt = new eventtree(ceg);
 
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
@@ -30,13 +43,13 @@ int skim_electron(const char* input, const char* output) {
 
    const float mindr2 = 0.15 * 0.15;
 
-   uint64_t nentries = tin->GetEntries();
+   uint64_t nentries = ceg->GetEntries();
    printf("total entries: %lu\n", nentries);
    for (uint64_t i=0; i<nentries; ++i) {
       elet->clear();
 
-      tin->GetEntry(i);
-      tevt->GetEntry(i);
+      ceg->GetEntry(i);
+      cevt->GetEntry(i);
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
       elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
