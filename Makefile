@@ -1,20 +1,31 @@
 CXX = clang++
-CXXFLAGS += -O2 -Wall -Werror -Wextra --std=c++14
+CXXFLAGS += -O2 -Wall -Werror -Wextra
 ROOTFLAGS := `root-config --cflags --libs` -lEG
 
 BUILDDIR = ./build
 
-SRCS  = $(wildcard *.C)
-EXES  = $(patsubst %.C,%,$(SRCS))
-DEPS  = $(patsubst %.C,$(BUILDDIR)/%.d,$(SRCS))
+CSRCS   = $(wildcard *.C)
+CEXES   = $(patsubst %.C,%,$(CSRCS))
+CDEPS   = $(patsubst %.C,$(BUILDDIR)/%.d,$(CSRCS))
+
+CPPSRCS = $(wildcard *.cpp)
+CPPEXES = $(patsubst %.cpp,%,$(CPPSRCS))
+CPPDEPS = $(patsubst %.cpp,$(BUILDDIR)/%.d,$(CPPSRCS))
+
+EXES = $(CEXES) $(CPPEXES)
+DEPS = $(CDEPS) $(CPPDEPS)
 
 .PHONY: all clean
 
-all: $(EXES)
+all: $(CEXES) $(CPPEXES)
 
-%: %.C
+$(CEXES) : % : %.C
 	@mkdir -p $(BUILDDIR)/$(@D)
-	$(CXX) $(ROOTFLAGS) $(CXXFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@
+	$(CXX) $(CXXFLAGS) $(ROOTFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@
+
+$(CPPEXES) : % : %.cpp
+	@mkdir -p $(BUILDDIR)/$(@D)
+	$(CXX) $(CXXFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@
 
 clean:
 	@$(RM) $(EXES) $(DEPS)
