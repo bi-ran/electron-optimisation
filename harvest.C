@@ -12,10 +12,10 @@
 #include "TLegendEntry.h"
 #include "TLatex.h"
 
-#include <vector>
-#include <string>
 #include <algorithm>
 #include <fstream>
+#include <string>
+#include <vector>
 
 #include "git/config/configurer.h"
 
@@ -23,7 +23,7 @@
 
 void set_ratio_style(TH1D* h);
 
-int harvest_hists(const char* output, const char* config) {
+int harvest(const char* output, const char* config) {
    configurer* conf = new configurer(config);
 
    auto files = conf->get<std::vector<std::string>>("files");
@@ -169,6 +169,7 @@ int harvest_hists(const char* output, const char* config) {
       }
    }
 
+   c1->SaveAs(Form("figs/%s-%s.pdf", filename.c_str(), output));
    c1->SaveAs(Form("figs/%s-%s.png", filename.c_str(), output));
    delete c1;
 
@@ -195,9 +196,9 @@ void set_ratio_style(TH1D* h) {
 int main(int argc, char* argv[]) {
    if (argc > 2) {
       for (int f = 2; f < argc; ++f)
-         harvest_hists(argv[1], argv[f]);
+         harvest(argv[1], argv[f]);
    } else {
-      printf("usage: ./harvest_hists [output] [configs ...]\n");
+      printf("usage: %s [output] [configs ...]\n", argv[0]);
       return 1;
    }
 }
