@@ -1,9 +1,10 @@
 #include "TFile.h"
 #include "TChain.h"
 #include "TTree.h"
+#include "TLorentzVector.h"
 
-#include "eventtree.h"
-#include "electrontree.h"
+#include "include/eventtree.h"
+#include "include/electrontree.h"
 
 #include "git/config/configurer.h"
 
@@ -15,7 +16,7 @@ inline float dphi_2s1f1b(float phi1, float phi2) {
    return dphi;
 }
 
-int skim_electron(const char* config, const char* output) {
+int extract(const char* config, const char* output) {
    configurer* conf = new configurer(config);
    auto files = conf->get<std::vector<std::string>>("files");
 
@@ -91,10 +92,9 @@ int skim_electron(const char* config, const char* output) {
 }
 
 int main(int argc, char* argv[]) {
-   if (argc == 3) {
-      return skim_electron(argv[1], argv[2]);
-   } else {
-      printf("usage: ./skim_electron [input] [output]\n");
-      return 1;
-   }
+   if (argc == 3)
+      return extract(argv[1], argv[2]);
+
+   printf("usage: %s [input] [output]\n", argv[0]);
+   return 1;
 }
