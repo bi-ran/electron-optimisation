@@ -34,6 +34,9 @@ int extract(const char* config, const char* output) {
    int hiBin;
    cevt->SetBranchStatus("hiBin", 1);
    cevt->SetBranchAddress("hiBin", &hiBin);
+   float hiHF;
+   cevt->SetBranchStatus("hiHF", 1);
+   cevt->SetBranchAddress("hiHF", &hiHF);
 
    eventtree* evtt = new eventtree(ceg);
 
@@ -79,8 +82,26 @@ int extract(const char* config, const char* output) {
          if (match != -1) { elet->mcRecoMatchIndex[match] = j; }
       }
 
+      float elePairZMass = -1;
+      for (int j=0; j<evtt->nEle; ++j) {
+         for (int k=j+1; k<evtt->nEle; ++k) {
+            /* reconstruct Z peak */
+            TLorentzVector e1; TLorentzVector e2;
+            e1.SetPtEtaPhiM((*evtt->elePt)[j], (*evtt->eleEta)[j],
+               (*evtt->elePhi)[j], 0.000511);
+            e2.SetPtEtaPhiM((*evtt->elePt)[k], (*evtt->eleEta)[k],
+               (*evtt->elePhi)[k], 0.000511);
+
+            TLorentzVector zcand = e1 + e2;
+            if (std::abs(zcand.M() - 91.1876) > elePairZMass)
+               elePairZMass = zcand.M();
+         }
+      }
+
       elet->copy(evtt);
       elet->hiBin = hiBin;
+      elet->hiHF = hiHF;
+      elet->elePairZMass = elePairZMass;
 
       tout->Fill();
    }

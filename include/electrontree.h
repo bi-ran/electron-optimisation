@@ -24,6 +24,8 @@
 
 #define NEWVARBRANCHES(ACTION)                        \
    ACTION(int, hiBin)                                 \
+   ACTION(float, hiHF)                                \
+   ACTION(float, elePairZMass)                        \
 
 #define VECBRANCHES(ACTION)                           \
    ACTION(std::vector<int>, nPU)                      \
