@@ -1,6 +1,4 @@
-#include <cstdlib>
-#include <cstdio>
-
+#include <fstream>
 #include <string>
 
 #include "git/config/configurer.h"
@@ -24,56 +22,52 @@ int generate(const char* config, const char* output) {
    std::string outstr = "tex/electron-reco-comparison-";
    outstr += output; outstr += ".tex";
 
-   FILE* fp = fopen(outstr.data(), "w+");
-   fprintf(fp, "\\documentclass[pdf]{beamer}\n"
-               "\\mode<presentation>{\\usetheme{CambridgeUS}}\n"
-               "\\setbeamertemplate{navigation symbols}{}\n"
-               "\\setbeamertemplate{caption}{\\raggedright\\insertcaption\\par}\n"
-               "\n"
-               "\\title{Electron performance}\n"
-               "\\subtitle{%s}\n"
-               "\n"
-               "\\begin{document}\n"
-               "\n"
-               "\\begin{frame}\n"
-               "\\titlepage\n"
-               "\\end{frame}\n"
-               "\n"
-               "\\begin{frame}{General}\n"
-               "\\begin{itemize}\n"
-               "\\item Sample: $Z \\rightarrow e^{+}e^{-}$\n"
-               "\\item Electron selections:\n"
-               "    \\begin{itemize}\n"
-               "    \\item electron $p_{T} > 10$\\,GeV\n"
-               "    \\item 2015 veto ID cuts\n"
-               "    \\end{itemize}\n",
-               title.data());
+   std::fstream fs(outstr, std::fstream::out);
+   fs << "\\documentclass[pdf]{beamer}\n"
+      << "\\mode<presentation>{\\usetheme{CambridgeUS}}\n"
+      << "\\setbeamertemplate{navigation symbols}{}\n"
+      << "\\setbeamertemplate{caption}{\\raggedright\\insertcaption\\par}\n"
+      << "\n"
+      << "\\title{Electron performance}\n"
+      << "\\subtitle{" << title << "}\n"
+      << "\n"
+      << "\\begin{document}\n"
+      << "\n"
+      << "\\begin{frame}\n"
+      << "\\titlepage\n"
+      << "\\end{frame}\n"
+      << "\n"
+      << "\\begin{frame}{General}\n"
+      << "\\begin{itemize}\n"
+      << "\\item Sample: $Z \\rightarrow e^{+}e^{-}$\n"
+      << "\\item Electron selections:\n"
+      << "    \\begin{itemize}\n"
+      << "    \\item electron $p_{T} > 10$\\,GeV\n"
+      << "    \\item 2015 veto ID cuts\n"
+      << "    \\end{itemize}\n";
    for (const auto& l : overview)
-      fprintf(fp, "\\item %s\n", l.data());
-   fprintf(fp, "\\end{itemize}\n"
-               "\\end{frame}\n"
-               "\n");
+      fs << "\\item" << l << "\n";
+   fs << "\\end{itemize}\n"
+      << "\\end{frame}\n"
+      << "\n";
 
    uint32_t f = 0;
    for (uint32_t i=0; i<(nfigs+perpage-1)/perpage; ++i) {
-      fprintf(fp, "\\begin{frame}\n"
-                  "\\begin{figure}[htb]\n"
-                  "\\centering\n");
+      fs << "\\begin{frame}\n"
+         << "\\begin{figure}[htb]\n"
+         << "\\centering\n";
       for (uint32_t j=0; j<perpage && f<nfigs; ++j, ++f)
-         fprintf(fp, "\\begin{minipage}{%f\\textwidth}\n"
-                     "\\centering\n"
-                     "\\includegraphics[width=0.99\\textwidth]{%s}\n"
-                     "\\caption{%s}\n"
-                     "\\end{minipage}\n",
-                 0.99 / perpage - 0.01, figures[f].data(), captions[f].data());
-      fprintf(fp, "\\end{figure}\n"
-                  "\\end{frame}\n"
-                  "\n");
+         fs << "\\begin{minipage}{" << 0.99/perpage-0.01 << "\\textwidth}\n"
+            << "\\centering\n"
+            << "\\includegraphics[width=0.99\\textwidth]{" << figures[f] << "}\n"
+            << "\\caption{" << captions[f] << "}\n"
+            << "\\end{minipage}\n";
+      fs << "\\end{figure}\n"
+         << "\\end{frame}\n"
+         << "\n";
    }
 
-   fprintf(fp, "\\end{document}\n");
-
-   fclose(fp);
+   fs << "\\end{document}\n";
 
    return 0;
 }
