@@ -39,6 +39,7 @@ int harvest(const char* output, const char* config) {
 
    auto type = conf->get<int>("type");
    auto common = conf->get<std::string>("common");
+   auto eventsel = conf->get<std::string>("eventsel");
    auto text = conf->get<std::vector<std::string>>("text");
 
    auto nbins = conf->get<std::vector<int>>("nbins");
@@ -111,6 +112,10 @@ int harvest(const char* output, const char* config) {
          case 2: h[j]->Scale(1. / h[j]->Integral(), "width"); break;
          case 3: h[j]->Scale(1. / t[j]->GetEntries()); break;
          case 4: h[j]->Scale(1. / t[j]->GetEntries(), "width"); break;
+         case 5: h[j]->Scale(1. / t[j]->GetEntries(
+            eventsel.c_str())); break;
+         case 6: h[j]->Scale(1. / t[j]->GetEntries(
+            eventsel.c_str()), "width"); break;
          default: break;
       }
 
