@@ -46,6 +46,7 @@ int harvest(const char* output, const char* config) {
    auto xbins = conf->get<std::vector<float>>("xbins");
    auto rmin = conf->get<std::vector<float>>("rmin");
    auto rmax = conf->get<std::vector<float>>("rmax");
+   auto autorange = conf->get<bool>("autorange");
 
    auto csize = conf->get<std::vector<int>>("csize");
    if (csize.size() != 2) { printf("invalid canvas size!\n"); return 1; }
@@ -60,6 +61,9 @@ int harvest(const char* output, const char* config) {
    auto colours = conf->get<std::vector<int>>("colours");
 
    auto filename = conf->get<std::string>("filename");
+
+   double amin = 1;
+   double amax = 0;
 
    TH1::SetDefaultSumw2();
    gStyle->SetOptStat(0);
@@ -119,8 +123,20 @@ int harvest(const char* output, const char* config) {
          default: break;
       }
 
-      if (nbins.size() == 1 && rmin.size() > 1 && rmax.size() > 1)
-         h[j]->SetAxisRange(rmin[1], rmax[1], "Y");
+      if (nbins.size() == 1) {
+         if (logscale) { amin = std::min(amin, h[j]->GetMinimum(0)); }
+         else { amin = std::min(amin, h[j]->GetMinimum()); }
+         amax = std::max(amax, h[j]->GetMaximum());
+
+         if (rmin.size() > 1 && rmax.size() > 1)
+            h[j]->SetAxisRange(rmin[1], rmax[1], "Y");
+      }
+   }
+
+   if (autorange) {
+      if (amax > amin * 1.08) amin = 0;
+      for (uint32_t j = 0; j < nfiles; ++j)
+         h[j]->SetAxisRange(amin * 0.8, amax * 1.44, "Y");
    }
 
    int cheight = drawratio ? csize[1] * 1.2 : csize[1];
