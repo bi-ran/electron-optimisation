@@ -21,14 +21,18 @@
 
 #include "include/cosmetics.h"
 
+#define ASSERT(condition, message)     \
+   if (!(condition)) {                 \
+      printf(message "\n");            \
+      return 1;                        \
+   }
+
 void set_ratio_style(TH1D* h);
 
 int harvest(const char* output, const char* config) {
    configurer* conf = new configurer(config);
 
    auto files = conf->get<std::vector<std::string>>("files");
-   std::size_t nfiles = files.size();
-   if (!nfiles) { printf("error: no files provided!\n"); return 1; }
 
    auto trees = conf->get<std::vector<std::string>>("trees");
    auto vars = conf->get<std::vector<std::string>>("vars");
@@ -49,7 +53,6 @@ int harvest(const char* output, const char* config) {
    auto autorange = conf->get<bool>("autorange");
 
    auto csize = conf->get<std::vector<int>>("csize");
-   if (csize.size() != 2) { printf("invalid canvas size!\n"); return 1; }
    auto logx = conf->get<bool>("logx");
    auto logy = conf->get<bool>("logy");
    auto drawratio = conf->get<bool>("drawratio");
@@ -62,6 +65,22 @@ int harvest(const char* output, const char* config) {
    auto colours = conf->get<std::vector<int>>("colours");
 
    auto filename = conf->get<std::string>("filename");
+
+   ASSERT(!files.empty(), "no files provided")
+   ASSERT(files.size() == trees.size(), "#files != #trees")
+   ASSERT(files.size() == vars.size(), "#files != #vars")
+   ASSERT(files.size() == tags.size(), "#files != #tags")
+   ASSERT(files.size() == labels.size(), "#files != #labels")
+   ASSERT(files.size() == legends.size(), "#files != #legends")
+   ASSERT(files.size() == selections.size(), "#files != #selections")
+   ASSERT(rmin.size() == 2, "invalid (min) ranges")
+   ASSERT(rmax.size() == 2, "invalid (max) ranges")
+   ASSERT(csize.size() == 2, "invalid canvas size")
+   ASSERT(groups.size() == headers.size(), "#groups != #headers")
+   ASSERT(markers.size() == colours.size(), "#markers != #colours")
+   ASSERT(colours.size() == files.size(), "#files != #colours")
+
+   std::size_t nfiles = files.size();
 
    double amin = 1;
    double amax = 0;
