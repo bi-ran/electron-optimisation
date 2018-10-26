@@ -50,8 +50,9 @@ int harvest(const char* output, const char* config) {
 
    auto csize = conf->get<std::vector<int>>("csize");
    if (csize.size() != 2) { printf("invalid canvas size!\n"); return 1; }
+   auto logx = conf->get<bool>("logx");
+   auto logy = conf->get<bool>("logy");
    auto drawratio = conf->get<bool>("drawratio");
-   auto logscale = conf->get<bool>("logscale");
    auto normalise = conf->get<int>("normalise");
 
    auto groups = conf->get<std::vector<int>>("groups");
@@ -124,7 +125,7 @@ int harvest(const char* output, const char* config) {
       }
 
       if (nbins.size() == 1) {
-         if (logscale) { amin = std::min(amin, h[j]->GetMinimum(0)); }
+         if (logy) { amin = std::min(amin, h[j]->GetMinimum(0)); }
          else { amin = std::min(amin, h[j]->GetMinimum()); }
          amax = std::max(amax, h[j]->GetMaximum());
 
@@ -154,7 +155,8 @@ int harvest(const char* output, const char* config) {
       h[0]->GetXaxis()->SetTitleOffset(99);
    }
 
-   if (logscale) { gPad->SetLogy(); }
+   if (logx) { gPad->SetLogx(); }
+   if (logy) { gPad->SetLogy(); }
 
    float lmaxy = 0.835; float lminy = lmaxy - 0.03 * (legends.size() + headers.size());
    TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
