@@ -25,6 +25,7 @@
 #define NEWVARBRANCHES(ACTION)                        \
    ACTION(int, hiBin)                                 \
    ACTION(float, hiHF)                                \
+   ACTION(float, ncoll)                               \
    ACTION(float, elePairZMass)                        \
 
 #define VECBRANCHES(ACTION)                           \
