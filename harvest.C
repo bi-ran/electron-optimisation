@@ -27,6 +27,7 @@
       return 1;                        \
    }
 
+int get_baseline(std::vector<int> groups, uint32_t index);
 void set_ratio_style(TH1D* h);
 
 int harvest(const char* output, const char* config) {
@@ -203,9 +204,11 @@ int harvest(const char* output, const char* config) {
 
    if (drawratio) {
       c1->cd(2);
-      for (std::size_t j = 1; j < nfiles; ++j) {
+      for (std::size_t j = 0; j < nfiles; ++j) {
+         auto k = get_baseline(groups, j);
+         if (k < 0 || k == (int)j) { continue; }
          hr1[j] = (TH1D*)h1[j]->Clone(Form("hr1f%zu%s", j, tags[j].c_str()));
-         hr1[j]->Divide(h1[0]);
+         hr1[j]->Divide(h1[k]);
          set_ratio_style(hr1[j]);
          hr1[j]->Draw("p e same");
       }
@@ -223,8 +226,17 @@ int harvest(const char* output, const char* config) {
    return 0;
 }
 
+int get_baseline(std::vector<int> groups, uint32_t index) {
+   int max = -1;
+   for (const auto& g : groups)
+      if (g > max && g <= (int)index)
+         max = g;
+
+   return max;
+}
+
 void set_ratio_style(TH1D* h) {
-   h->SetAxisRange(0.5, 1.5, "Y");
+   h->SetAxisRange(0.0, 2.0, "Y");
    h->GetXaxis()->SetLabelSize(0.08);
    h->GetXaxis()->SetTitleSize(0.1);
    h->GetYaxis()->SetLabelSize(0.08);
