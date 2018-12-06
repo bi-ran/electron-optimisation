@@ -10,7 +10,8 @@
 #define BRANCHES(ACTION)                              \
    VARBRANCHES(ACTION)                                \
    NEWVARBRANCHES(ACTION)                             \
-   VECBRANCHES(ACTION)                                \
+   VECBRANCHESMC(ACTION)                              \
+   VECBRANCHESDATA(ACTION)                            \
    NEWVECBRANCHES(ACTION)                             \
 
 #define VARBRANCHES(ACTION)                           \
@@ -28,7 +29,7 @@
    ACTION(float, ncoll)                               \
    ACTION(float, elePairZMass)                        \
 
-#define VECBRANCHES(ACTION)                           \
+#define VECBRANCHESMC(ACTION)                         \
    ACTION(std::vector<int>, nPU)                      \
    ACTION(std::vector<int>, puBX)                     \
    ACTION(std::vector<float>, puTrue)                 \
@@ -55,6 +56,8 @@
    ACTION(std::vector<float>, mcCalIsoDR04)           \
    ACTION(std::vector<float>, mcTrkIsoDR03)           \
    ACTION(std::vector<float>, mcTrkIsoDR04)           \
+
+#define VECBRANCHESDATA(ACTION)                       \
    ACTION(std::vector<int>, eleCharge)                \
    ACTION(std::vector<int>, eleChargeConsistent)      \
    ACTION(std::vector<int>, eleSCPixCharge)           \
@@ -141,9 +144,8 @@
 #define CREATE(type, var) t->Branch(#var, &var);
 #define CLEAR(type, var) var.clear();
 #define VARCOPY(type, var) var = evtt->var;
-#define VECCOPY(type, var)                            \
-   std::copy(evtt->var->begin(), evtt->var->end(),    \
-         std::back_inserter(var));                    \
+#define VECCOPY(type, var)                                                    \
+   std::copy(evtt->var->begin(), evtt->var->end(), std::back_inserter(var));  \
 
 class electrontree {
    public:
@@ -151,24 +153,28 @@ class electrontree {
       electrontree(TTree* t) : electrontree() { branch(t); };
       ~electrontree() {};
 
-      void branch(TTree* t) { BRANCHES(CREATE) };
-      void clear() { VECBRANCHES(CLEAR) NEWVECBRANCHES(CLEAR) };
+      void branch(TTree* t) {
+         VARBRANCHES(CREATE)
+         if (!isData) {
+            VECBRANCHESMC(CREATE) }
+         VECBRANCHESDATA(CREATE)
+         NEWVARBRANCHES(CREATE)
+         NEWVECBRANCHES(CREATE)
+      };
+      void clear() {
+         VECBRANCHESMC(CLEAR)
+         VECBRANCHESDATA(CLEAR)
+         NEWVECBRANCHES(CLEAR)
+      };
 
       void copy(eventtree* evtt) {
          VARBRANCHES(VARCOPY)
-         VECBRANCHES(VECCOPY)
+         if (!isData) {
+            VECBRANCHESMC(VECCOPY) }
+         VECBRANCHESDATA(VECCOPY)
       };
 
       BRANCHES(DECLARE)
 };
-
-#undef BRANCHES
-#undef VARBRANCHES
-#undef VECBRANCHES
-#undef ARRBRANCHES
-#undef INVALID
-#undef DECLARE
-#undef CREATE
-#undef CLEAR
 
 #endif  /* ELECTRONTREE_H */

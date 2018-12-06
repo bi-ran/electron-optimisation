@@ -54,7 +54,7 @@ int extract(const char* config, const char* output) {
       chlt->SetBranchAddress(paths[i].data(), &hlt[i]);
    }
 
-   eventtree* evtt = new eventtree(ceg);
+   eventtree* evtt = new eventtree(ceg, isdata);
 
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
@@ -69,39 +69,39 @@ int extract(const char* config, const char* output) {
    for (uint64_t i=0; i<nentries; ++i) {
       elet->clear();
 
-      hlt.reserve(paths.size());
-
       ceg->GetEntry(i);
       cevt->GetEntry(i);
       chlt->GetEntry(i);
 
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
-      elet->hlt.swap(hlt);
+      for (auto const& b : hlt) { elet->hlt.push_back(b); }
 
-      elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
-      for (int j=0; j<evtt->nEle; ++j) {
-         int match = -1;
-         float maxpt = -1;
+      if (!elet->isData) {
+         elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
+         for (int j=0; j<evtt->nEle; ++j) {
+            int match = -1;
+            float maxpt = -1;
 
-         for (int k=0; k<evtt->nMC; ++k) {
-            if (abs((*evtt->mcPID)[k]) != 11) { continue; }
-            if ((*evtt->mcStatus)[k] != 1) { continue; }
+            for (int k=0; k<evtt->nMC; ++k) {
+               if (abs((*evtt->mcPID)[k]) != 11) { continue; }
+               if ((*evtt->mcStatus)[k] != 1) { continue; }
 
-            if ((*evtt->mcPt)[k] < maxpt) { continue; }
+               if ((*evtt->mcPt)[k] < maxpt) { continue; }
 
-            float dphi = dphi_2s1f1b((*evtt->elePhi)[j], (*evtt->mcPhi)[k]);
-            float deta = fabs((*evtt->eleEta)[j] - (*evtt->mcEta)[k]);
-            float dr2 = dphi * dphi + deta * deta;
+               float dphi = dphi_2s1f1b((*evtt->elePhi)[j], (*evtt->mcPhi)[k]);
+               float deta = fabs((*evtt->eleEta)[j] - (*evtt->mcEta)[k]);
+               float dr2 = dphi * dphi + deta * deta;
 
-            if (dr2 < mindr2) {
-               match = k;
-               maxpt = (*evtt->mcPt)[k];
+               if (dr2 < mindr2) {
+                  match = k;
+                  maxpt = (*evtt->mcPt)[k];
+               }
             }
-         }
 
-         elet->eleGenMatchIndex.push_back(match);
-         if (match != -1) { elet->mcRecoMatchIndex[match] = j; }
+            elet->eleGenMatchIndex.push_back(match);
+            if (match != -1) { elet->mcRecoMatchIndex[match] = j; }
+         }
       }
 
       float elePairZMass = -1;
@@ -123,7 +123,7 @@ int extract(const char* config, const char* output) {
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;
-      elet->ncoll = isdata ? 1 : ncoll(hiBin);
+      elet->ncoll = elet->isData ? 1 : ncoll(hiBin);
       elet->elePairZMass = elePairZMass;
 
       tout->Fill();

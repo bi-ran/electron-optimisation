@@ -6,10 +6,10 @@
 #include <vector>
 
 #define BRANCHES(ACTION)                              \
-   ACTION(UInt_t, run)                                \
-   ACTION(ULong64_t, event)                           \
-   ACTION(UInt_t, lumis)                              \
-   ACTION(Bool_t, isData)                             \
+   BRANCHESMC(ACTION)                                 \
+   BRANCHESDATA(ACTION)                               \
+
+#define BRANCHESMC(ACTION)                            \
    ACTION(Int_t, nPUInfo)                             \
    ACTION(std::vector<int>*, nPU)                     \
    ACTION(std::vector<int>*, puBX)                    \
@@ -38,6 +38,12 @@
    ACTION(std::vector<float>*, mcCalIsoDR04)          \
    ACTION(std::vector<float>*, mcTrkIsoDR03)          \
    ACTION(std::vector<float>*, mcTrkIsoDR04)          \
+
+#define BRANCHESDATA(ACTION)                          \
+   ACTION(UInt_t, run)                                \
+   ACTION(ULong64_t, event)                           \
+   ACTION(UInt_t, lumis)                              \
+   ACTION(Bool_t, isData)                             \
    ACTION(Int_t, nEle)                                \
    ACTION(std::vector<int>*, eleCharge)               \
    ACTION(std::vector<int>*, eleChargeConsistent)     \
@@ -124,10 +130,14 @@
 class eventtree {
    public:
       eventtree() { BRANCHES(ZERO) };
-      eventtree(TTree* t) : eventtree() { read(t); }
+      eventtree(TTree* t, bool isdata) : eventtree() { read(t, isdata); }
       ~eventtree() { };
 
-      void read(TTree* t) { BRANCHES(READ) };
+      void read(TTree* t, bool isdata) {
+         if (!isdata) {
+            BRANCHESMC(READ) }
+         BRANCHESDATA(READ)
+      };
 
       BRANCHES(DECLARE)
 };
