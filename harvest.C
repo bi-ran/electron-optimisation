@@ -184,7 +184,8 @@ int harvest(const char* output, const char* config) {
    if (logx) { gPad->SetLogx(); }
    if (logy) { gPad->SetLogy(); }
 
-   float lmaxy = 0.835; float lminy = lmaxy - 0.03 * (legends.size() + headers.size());
+   float lmaxy = 0.835;
+   float lminy = lmaxy - 0.03 * (legends.size() + headers.size());
    TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
    lstyle(l1, 43, 14);
 
@@ -194,7 +195,8 @@ int harvest(const char* output, const char* config) {
       hstyle(h[j], markers[j], colours[j]);
       if (!drawratio || splitcanvas) { h[j]->Draw("p e same"); }
 
-      unsigned k = std::abs(std::distance(groups.begin(), std::find(groups.begin(), groups.end(), j)));
+      unsigned k = std::abs(std::distance(groups.begin(), std::find(
+         groups.begin(), groups.end(), j)));
       if (k < groups.size() && !headers[k].empty()) {
          TLegendEntry* e1 = l1->AddEntry((TObject*)0, headers[k].c_str(), "");
          e1->SetTextFont(63); e1->SetTextSize(17);
@@ -216,7 +218,8 @@ int harvest(const char* output, const char* config) {
 
          switch (ratiotype) {
             case 0:
-               hr1[j] = (TH1D*)h1[j]->Clone(Form("hr1f%zu%s", j, tags[j].c_str()));
+               hr1[j] = (TH1D*)h1[j]->Clone(
+                  Form("hr1f%zu%s", j, tags[j].c_str()));
                hr1[j]->Divide(h1[k]);
                set_ratio_style(hr1[j]);
                hr1[j]->Draw("p e same");
