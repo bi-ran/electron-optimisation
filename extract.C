@@ -24,6 +24,8 @@ int extract(const char* config, const char* output) {
    auto paths = conf->get<std::vector<std::string>>("paths");
    auto isdata = conf->get<bool>("isdata");
 
+   auto maxentries = conf->get<uint64_t>("maxentries");
+
    TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
    TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
    TChain* chlt = new TChain("hltanalysis/HltTree");
@@ -62,7 +64,8 @@ int extract(const char* config, const char* output) {
    const float mindr2 = 0.15 * 0.15;
 
    uint64_t nentries = ceg->GetEntries();
-   printf("total entries: %lu\n", nentries);
+   if (maxentries > 0) { nentries = std::min(nentries, maxentries); }
+   printf("entries: %lu\n", nentries);
    for (uint64_t i=0; i<nentries; ++i) {
       elet->clear();
 
