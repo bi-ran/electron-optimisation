@@ -219,8 +219,18 @@ int harvest(const char* output, const char* config) {
       c1->cd(splitcanvas);
 
       hrframe = (TH1D*)h[0]->Clone("hrframe");
-      if (splitcanvas) { set_ratio_style(hrframe); }
-      else { hrframe->SetAxisRange(0, 1.2, "Y"); }
+      set_ratio_style(hrframe);
+      switch (ratiotype) {
+         case 0:
+            hrframe->SetAxisRange(0, 2, "Y");
+            hrframe->SetNdivisions(205, "Y");
+            hrframe->SetYTitle("ratio");
+            break;
+         case 1:
+            hrframe->SetAxisRange(0, 1.2, "Y");
+            hrframe->SetYTitle("efficiency");
+            break;
+      }
       hrframe->Draw("axis");
 
       for (std::size_t j = 0; j < nfiles; ++j) {
@@ -276,15 +286,14 @@ int get_baseline(std::vector<int> groups, uint32_t index) {
 }
 
 void set_ratio_style(TH1D* h) {
-   h->SetAxisRange(0.0, 2.0, "Y");
-   h->GetXaxis()->SetLabelSize(0.08);
-   h->GetXaxis()->SetTitleSize(0.1);
-   h->GetYaxis()->SetLabelSize(0.08);
-   h->GetYaxis()->SetTitleSize(0.08);
+   float npixelspad = gPad->GetWh() * gPad->GetAbsHNDC();
+
+   h->GetXaxis()->SetLabelSize(13 / npixelspad);
+   h->GetXaxis()->SetTitleSize(16 / npixelspad);
+   h->GetYaxis()->SetLabelSize(13 / npixelspad);
+   h->GetYaxis()->SetTitleSize(16 / npixelspad);
    h->GetYaxis()->CenterTitle();
    h->GetYaxis()->SetTitleOffset(0.5);
-   h->SetNdivisions(205, "Y");
-   h->SetYTitle("ratio");
 }
 
 int main(int argc, char* argv[]) {
