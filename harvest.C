@@ -4,6 +4,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
+#include "TGraphAsymmErrors.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TCanvas.h"
@@ -56,7 +57,11 @@ int harvest(const char* output, const char* config) {
    auto csize = conf->get<std::vector<int>>("csize");
    auto logx = conf->get<bool>("logx");
    auto logy = conf->get<bool>("logy");
+
+   auto splitcanvas = conf->get<bool>("splitcanvas");
    auto drawratio = conf->get<bool>("drawratio");
+   auto ratiotype = conf->get<int>("ratiotype");
+
    auto normalise = conf->get<int>("normalise");
 
    auto groups = conf->get<std::vector<int>>("groups");
@@ -91,7 +96,8 @@ int harvest(const char* output, const char* config) {
 
    TFile* f[nfiles]; TTree* t[nfiles];
    TH1D* h1[nfiles]; TH2D* h2[nfiles]; TProfile* hp[nfiles];
-   TH1D* hr1[nfiles];
+
+   TH1D* hr1[nfiles]; TGraphAsymmErrors* gr1[nfiles];
 
    TH1* h[nfiles];
    for (std::size_t j = 0; j < nfiles; ++j) {
@@ -162,7 +168,7 @@ int harvest(const char* output, const char* config) {
 
    int cheight = drawratio ? csize[1] * 1.2 : csize[1];
    TCanvas* c1 = new TCanvas("c1", "", csize[0], cheight);
-   if (drawratio) {
+   if (drawratio && splitcanvas) {
       TPad* t1 = new TPad("p1", "", 0, 0.25, 1, 1);
       t1->SetTopMargin(0.11111); t1->SetBottomMargin(0);
       t1->Draw(); t1->SetNumber(1);
@@ -182,11 +188,11 @@ int harvest(const char* output, const char* config) {
    TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
    lstyle(l1, 43, 14);
 
-   h[0]->Draw("axis");
+   if (!drawratio || splitcanvas) { h[0]->Draw("axis"); }
 
    for (std::size_t j = 0; j < nfiles; ++j) {
       hstyle(h[j], markers[j], colours[j]);
-      h[j]->Draw("p e same");
+      if (!drawratio || splitcanvas) { h[j]->Draw("p e same"); }
 
       unsigned k = std::abs(std::distance(groups.begin(), std::find(groups.begin(), groups.end(), j)));
       if (k < groups.size() && !headers[k].empty()) {
@@ -203,14 +209,26 @@ int harvest(const char* output, const char* config) {
       t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].c_str());
 
    if (drawratio) {
-      c1->cd(2);
+      c1->cd(splitcanvas);
       for (std::size_t j = 0; j < nfiles; ++j) {
          auto k = get_baseline(groups, j);
          if (k < 0 || k == (int)j) { continue; }
-         hr1[j] = (TH1D*)h1[j]->Clone(Form("hr1f%zu%s", j, tags[j].c_str()));
-         hr1[j]->Divide(h1[k]);
-         set_ratio_style(hr1[j]);
-         hr1[j]->Draw("p e same");
+
+         switch (ratiotype) {
+            case 0:
+               hr1[j] = (TH1D*)h1[j]->Clone(Form("hr1f%zu%s", j, tags[j].c_str()));
+               hr1[j]->Divide(h1[k]);
+               set_ratio_style(hr1[j]);
+               hr1[j]->Draw("p e same");
+               break;
+            case 1:
+               gr1[j] = new TGraphAsymmErrors(h1[j]->GetNbinsX() + 2);
+               gr1[j]->SetName(Form("gr1f%zu%s", j, tags[j].c_str()));
+               gr1[j]->Divide(h1[j], h1[k], "c1=0.683 b(1,1) mode");
+               gr1[j]->Draw("p e same");
+            default:
+               break;
+         }
       }
    }
 
