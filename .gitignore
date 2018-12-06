@@ -22,3 +22,8 @@
 *.list
 *.log
 *.tar.gz
+
+# directories
+configs/
+local/
+tex/
