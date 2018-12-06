@@ -88,6 +88,10 @@ int harvest(const char* output, const char* config) {
 
    std::size_t nfiles = files.size();
 
+   std::for_each(legends.begin(), legends.end(), &rtrim);
+   uint32_t nonempty = std::count_if(legends.begin(), legends.end(),
+      [](std::string& l) { return !l.empty(); });
+
    double amin = 1;
    double amax = 0;
 
@@ -95,11 +99,13 @@ int harvest(const char* output, const char* config) {
    gStyle->SetOptStat(0);
 
    TFile* f[nfiles]; TTree* t[nfiles];
-   TH1D* h1[nfiles]; TH2D* h2[nfiles]; TProfile* hp[nfiles];
 
+   TH1D* hframe; TH1D* hrframe;
+   TH1D* h1[nfiles]; TH2D* h2[nfiles]; TProfile* hp[nfiles];
    TH1D* hr1[nfiles]; TGraphAsymmErrors* gr1[nfiles];
 
    TH1* h[nfiles];
+
    for (std::size_t j = 0; j < nfiles; ++j) {
       f[j] = new TFile(files[j].c_str(), "read");
       t[j] = (TTree*)f[j]->Get(trees[j].c_str());
@@ -149,24 +155,43 @@ int harvest(const char* output, const char* config) {
             eventsel.c_str()), "width"); break;
          default: break;
       }
+   }
+
+   hframe = (TH1D*)h[0]->Clone("hframe");
+
+   float lmaxy = 0.835;
+   float lminy = lmaxy - 0.03 * (nonempty + headers.size());
+   TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
+   lstyle(l1, 43, 14);
+
+   for (std::size_t j = 0; j < nfiles; ++j) {
+      hstyle(h[j], markers[j], colours[j]);
 
       if (nbins.size() == 1) {
          if (logy) { amin = std::min(amin, h[j]->GetMinimum(0)); }
          else { amin = std::min(amin, h[j]->GetMinimum()); }
          amax = std::max(amax, h[j]->GetMaximum());
-
-         if (rmin.size() > 1 && rmax.size() > 1)
-            h[j]->SetAxisRange(rmin[1], rmax[1], "Y");
       }
+
+      unsigned k = std::abs(std::distance(groups.begin(), std::find(
+         groups.begin(), groups.end(), j)));
+      if (k < groups.size() && !headers[k].empty()) {
+         TLegendEntry* e1 = l1->AddEntry((TObject*)0, headers[k].c_str(), "");
+         e1->SetTextFont(63); e1->SetTextSize(17);
+      }
+
+      if (!legends[j].empty()) {
+         l1->AddEntry(h[j], legends[j].c_str(), "pl"); }
    }
 
    if (autorange) {
       if (amax > amin * 1.08) amin = 0;
-      for (uint32_t j = 0; j < nfiles; ++j)
-         h[j]->SetAxisRange(amin * 0.8, amax * 1.44, "Y");
+      hframe->SetAxisRange(amin * 0.8, amax * 1.44, "Y");
+   } else if (rmin.size() > 1 && rmax.size() > 1) {
+      hframe->SetAxisRange(rmin[1], rmax[1], "Y");
    }
 
-   int cheight = drawratio ? csize[1] * 1.2 : csize[1];
+   int cheight = splitcanvas ? csize[1] * 1.2 : csize[1];
    TCanvas* c1 = new TCanvas("c1", "", csize[0], cheight);
    if (drawratio && splitcanvas) {
       TPad* t1 = new TPad("p1", "", 0, 0.25, 1, 1);
@@ -177,41 +202,27 @@ int harvest(const char* output, const char* config) {
       t2->Draw(); t2->SetNumber(2);
       c1->cd(1);
 
-      h[0]->GetXaxis()->SetLabelOffset(99);
-      h[0]->GetXaxis()->SetTitleOffset(99);
+      hframe->GetXaxis()->SetLabelOffset(99);
+      hframe->GetXaxis()->SetTitleOffset(99);
    }
 
-   if (logx) { gPad->SetLogx(); }
-   if (logy) { gPad->SetLogy(); }
+   gPad->SetLogx(logx);
+   gPad->SetLogy(logy);
 
-   float lmaxy = 0.835;
-   float lminy = lmaxy - 0.03 * (legends.size() + headers.size());
-   TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
-   lstyle(l1, 43, 14);
-
-   if (!drawratio || splitcanvas) { h[0]->Draw("axis"); }
-
-   for (std::size_t j = 0; j < nfiles; ++j) {
-      hstyle(h[j], markers[j], colours[j]);
-      if (!drawratio || splitcanvas) { h[j]->Draw("p e same"); }
-
-      unsigned k = std::abs(std::distance(groups.begin(), std::find(
-         groups.begin(), groups.end(), j)));
-      if (k < groups.size() && !headers[k].empty()) {
-         TLegendEntry* e1 = l1->AddEntry((TObject*)0, headers[k].c_str(), "");
-         e1->SetTextFont(63); e1->SetTextSize(17);
-      }
-      l1->AddEntry(h[j], legends[j].c_str(), "pl");
+   if (!drawratio || splitcanvas) {
+      hframe->Draw("axis");
+      for (std::size_t j = 0; j < nfiles; ++j)
+         h[j]->Draw("p e same");
    }
-
-   l1->Draw();
-
-   TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(15);
-   for (std::size_t l = 0; l < text.size(); ++l)
-      t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].c_str());
 
    if (drawratio) {
       c1->cd(splitcanvas);
+
+      hrframe = (TH1D*)h[0]->Clone("hrframe");
+      if (splitcanvas) { set_ratio_style(hrframe); }
+      else { hrframe->SetAxisRange(0, 1.2, "Y"); }
+      hrframe->Draw("axis");
+
       for (std::size_t j = 0; j < nfiles; ++j) {
          auto k = get_baseline(groups, j);
          if (k < 0 || k == (int)j) { continue; }
@@ -221,19 +232,27 @@ int harvest(const char* output, const char* config) {
                hr1[j] = (TH1D*)h1[j]->Clone(
                   Form("hr1f%zu%s", j, tags[j].c_str()));
                hr1[j]->Divide(h1[k]);
-               set_ratio_style(hr1[j]);
                hr1[j]->Draw("p e same");
                break;
             case 1:
                gr1[j] = new TGraphAsymmErrors(h1[j]->GetNbinsX() + 2);
                gr1[j]->SetName(Form("gr1f%zu%s", j, tags[j].c_str()));
                gr1[j]->Divide(h1[j], h1[k], "c1=0.683 b(1,1) mode");
+               hstyle(gr1[j], markers[j], colours[j]);
                gr1[j]->Draw("p e same");
             default:
                break;
          }
       }
    }
+
+   c1->cd(0);
+
+   l1->Draw();
+
+   TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(15);
+   for (std::size_t l = 0; l < text.size(); ++l)
+      t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].c_str());
 
    c1->SaveAs(Form("figs/%s-%s.pdf", filename.c_str(), output));
    c1->SaveAs(Form("figs/%s-%s.png", filename.c_str(), output));
