@@ -134,6 +134,7 @@
 #define NEWVECBRANCHES(ACTION)                        \
    ACTION(std::vector<int>, eleGenMatchIndex)         \
    ACTION(std::vector<int>, mcRecoMatchIndex)         \
+   ACTION(std::vector<int>, hlt)                      \
 
 #define INVALID(type, var) var = -1;
 #define DECLARE(type, var) type var;

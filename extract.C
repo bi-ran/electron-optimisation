@@ -19,26 +19,38 @@ inline float dphi_2s1f1b(float phi1, float phi2) {
 
 int extract(const char* config, const char* output) {
    configurer* conf = new configurer(config);
+
    auto files = conf->get<std::vector<std::string>>("files");
+   auto paths = conf->get<std::vector<std::string>>("paths");
    auto isdata = conf->get<bool>("isdata");
 
    TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
    TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
+   TChain* chlt = new TChain("hltanalysis/HltTree");
 
    for (const auto& file : files) {
       ceg->Add(file.data());
       cevt->Add(file.data());
+      chlt->Add(file.data());
    }
 
    ceg->SetBranchStatus("*", 0);
    cevt->SetBranchStatus("*", 0);
+   chlt->SetBranchStatus("*", 0);
 
    int hiBin;
    cevt->SetBranchStatus("hiBin", 1);
    cevt->SetBranchAddress("hiBin", &hiBin);
+
    float hiHF;
    cevt->SetBranchStatus("hiHF", 1);
    cevt->SetBranchAddress("hiHF", &hiHF);
+
+   std::vector<int> hlt(paths.size());
+   for (std::size_t i=0; i<paths.size(); ++i) {
+      chlt->SetBranchStatus(paths[i].data(), 1);
+      chlt->SetBranchAddress(paths[i].data(), &hlt[i]);
+   }
 
    eventtree* evtt = new eventtree(ceg);
 
@@ -54,12 +66,17 @@ int extract(const char* config, const char* output) {
    for (uint64_t i=0; i<nentries; ++i) {
       elet->clear();
 
+      hlt.reserve(paths.size());
+
       ceg->GetEntry(i);
       cevt->GetEntry(i);
+      chlt->GetEntry(i);
+
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
-      elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
+      elet->hlt.swap(hlt);
 
+      elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
       for (int j=0; j<evtt->nEle; ++j) {
          int match = -1;
          float maxpt = -1;
