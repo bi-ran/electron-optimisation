@@ -20,6 +20,7 @@ inline float dphi_2s1f1b(float phi1, float phi2) {
 int extract(const char* config, const char* output) {
    configurer* conf = new configurer(config);
    auto files = conf->get<std::vector<std::string>>("files");
+   auto isdata = conf->get<bool>("isdata");
 
    TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
    TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
@@ -102,7 +103,7 @@ int extract(const char* config, const char* output) {
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;
-      elet->ncoll = ncoll(hiBin);
+      elet->ncoll = isdata ? 1 : ncoll(hiBin);
       elet->elePairZMass = elePairZMass;
 
       tout->Fill();
