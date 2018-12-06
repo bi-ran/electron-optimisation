@@ -160,12 +160,12 @@ int harvest(const char* output, const char* config) {
    hframe = (TH1D*)h[0]->Clone("hframe");
 
    float lmaxy = 0.835;
-   float lminy = lmaxy - 0.03 * (nonempty + headers.size());
+   float lminy = lmaxy - 0.04 * (nonempty + headers.size());
    TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
-   lstyle(l1, 43, 14);
+   lstyle(l1, 43, 12);
 
    for (std::size_t j = 0; j < nfiles; ++j) {
-      hstyle(h[j], markers[j], colours[j]);
+      hstyle(h[j], markers[j], colours[j], 0.8);
 
       if (nbins.size() == 1) {
          if (logy) { amin = std::min(amin, h[j]->GetMinimum(0)); }
@@ -177,7 +177,7 @@ int harvest(const char* output, const char* config) {
          groups.begin(), groups.end(), j)));
       if (k < groups.size() && !headers[k].empty()) {
          TLegendEntry* e1 = l1->AddEntry((TObject*)0, headers[k].c_str(), "");
-         e1->SetTextFont(63); e1->SetTextSize(17);
+         e1->SetTextFont(63); e1->SetTextSize(13);
       }
 
       if (!legends[j].empty()) {
@@ -248,7 +248,7 @@ int harvest(const char* output, const char* config) {
                gr1[j] = new TGraphAsymmErrors(h1[j]->GetNbinsX() + 2);
                gr1[j]->SetName(Form("gr1f%zu%s", j, tags[j].c_str()));
                gr1[j]->Divide(h1[j], h1[k], "c1=0.683 b(1,1) mode");
-               hstyle(gr1[j], markers[j], colours[j]);
+               hstyle(gr1[j], markers[j], colours[j], 0.8);
                gr1[j]->Draw("p e same");
             default:
                break;
@@ -260,7 +260,7 @@ int harvest(const char* output, const char* config) {
 
    l1->Draw();
 
-   TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(15);
+   TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(13);
    for (std::size_t l = 0; l < text.size(); ++l)
       t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].c_str());
 

@@ -26,6 +26,12 @@ void watermark() {
 #include "TH1.h"
 
 template<typename T>
+void hstyle(T* h, int style, int colour, float size) {
+   hstyle(h, style, colour);
+   h->SetMarkerSize(size);
+}
+
+template<typename T>
 void hstyle(T* h, int style, int colour) {
    h->SetMarkerStyle(style);
    h->SetMarkerSize(1.2);
