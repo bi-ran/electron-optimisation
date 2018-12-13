@@ -58,8 +58,7 @@ int harvest(const char* output, const char* config) {
    auto autorange = conf->get<bool>("autorange");
 
    auto csize = conf->get<std::vector<int>>("csize");
-   auto logx = conf->get<bool>("logx");
-   auto logy = conf->get<bool>("logy");
+   auto logscale = conf->get<std::vector<bool>>("logscale");
 
    auto splitcanvas = conf->get<bool>("splitcanvas");
    auto drawratio = conf->get<bool>("drawratio");
@@ -72,8 +71,12 @@ int harvest(const char* output, const char* config) {
 
    auto markers = conf->get<std::vector<int>>("markers");
    auto colours = conf->get<std::vector<int>>("colours");
+   auto drawopts = conf->get<std::vector<std::string>>("drawopts");
 
    auto filename = conf->get<std::string>("filename");
+
+   VECTOR_DEFAULT(logscale, 2, false);
+   VECTOR_DEFAULT(drawopts, vars.size(), "p e same");
 
    ASSERT(!files.empty(), "no files provided")
    ASSERT(files.size() == trees.size(), "#files != #trees")
@@ -88,6 +91,7 @@ int harvest(const char* output, const char* config) {
    ASSERT(groups.size() == headers.size(), "#groups != #headers")
    ASSERT(markers.size() == colours.size(), "#markers != #colours")
    ASSERT(colours.size() == files.size(), "#files != #colours")
+   ASSERT(logscale.size() == 2, "(logx, logy)")
 
    std::size_t nfiles = files.size();
 
@@ -171,7 +175,7 @@ int harvest(const char* output, const char* config) {
       hstyle(h[j], markers[j], colours[j], 0.8);
 
       if (nbins.size() == 1) {
-         if (logy) { amin = std::min(amin, h[j]->GetMinimum(0)); }
+         if (logscale[1]) { amin = std::min(amin, h[j]->GetMinimum(0)); }
          else { amin = std::min(amin, h[j]->GetMinimum()); }
          amax = std::max(amax, h[j]->GetMaximum());
       }
@@ -209,20 +213,20 @@ int harvest(const char* output, const char* config) {
       hframe->GetXaxis()->SetTitleOffset(99);
    }
 
-   gPad->SetLogx(logx);
-   gPad->SetLogy(logy);
+   gPad->SetLogx(logscale[0]);
+   gPad->SetLogy(logscale[1]);
 
    if (!drawratio || splitcanvas) {
       hframe->Draw("axis");
       for (std::size_t j = 0; j < nfiles; ++j)
-         h[j]->Draw("p e same");
+         h[j]->Draw(drawopts[j].data());
    }
 
    if (drawratio) {
       c1->cd(splitcanvas);
 
       hrframe = (TH1D*)h[0]->Clone("hrframe");
-      set_ratio_style(hrframe);
+      set_ratio_style(hrframe, 16, 13);
       switch (ratiotype) {
          case 0:
             hrframe->SetAxisRange(0, 2, "Y");
@@ -245,14 +249,14 @@ int harvest(const char* output, const char* config) {
                hr1[j] = (TH1D*)h1[j]->Clone(
                   Form("hr1f%zu%s", j, tags[j].c_str()));
                hr1[j]->Divide(h1[k]);
-               hr1[j]->Draw("p e same");
+               hr1[j]->Draw(drawopts[j].data());
                break;
             case 1:
                gr1[j] = new TGraphAsymmErrors(h1[j]->GetNbinsX() + 2);
                gr1[j]->SetName(Form("gr1f%zu%s", j, tags[j].c_str()));
                gr1[j]->Divide(h1[j], h1[k], "c1=0.683 b(1,1) mode");
                hstyle(gr1[j], markers[j], colours[j], 0.8);
-               gr1[j]->Draw("p e same");
+               gr1[j]->Draw(drawopts[j].data());
             default:
                break;
          }
