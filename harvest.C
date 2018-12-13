@@ -52,8 +52,9 @@ int harvest(const char* output, const char* config) {
 
    auto nbins = conf->get<std::vector<int>>("nbins");
    auto xbins = conf->get<std::vector<float>>("xbins");
-   auto rmin = conf->get<std::vector<float>>("rmin");
-   auto rmax = conf->get<std::vector<float>>("rmax");
+   auto xrange = conf->get<std::vector<float>>("xrange");
+   auto ybins = conf->get<std::vector<float>>("ybins");
+   auto yrange = conf->get<std::vector<float>>("yrange");
    auto autorange = conf->get<bool>("autorange");
 
    auto csize = conf->get<std::vector<int>>("csize");
@@ -74,6 +75,8 @@ int harvest(const char* output, const char* config) {
 
    auto filename = conf->get<std::string>("filename");
 
+   VECTOR_DEFAULT(xrange, 2, 0);
+   VECTOR_DEFAULT(yrange, 2, 0);
    VECTOR_DEFAULT(logscale, 2, false);
    VECTOR_DEFAULT(drawopts, vars.size(), "p e same");
 
@@ -84,8 +87,8 @@ int harvest(const char* output, const char* config) {
    ASSERT(files.size() == labels.size(), "#files != #labels")
    ASSERT(files.size() == legends.size(), "#files != #legends")
    ASSERT(files.size() == selections.size(), "#files != #selections")
-   ASSERT(rmin.size() == 2, "invalid (min) ranges")
-   ASSERT(rmax.size() == 2, "invalid (max) ranges")
+   ASSERT(xrange.size() == 2, "invalid x axis range")
+   ASSERT(yrange.size() == 2, "invalid y axis range")
    ASSERT(csize.size() == 2, "invalid canvas size")
    ASSERT(groups.size() == headers.size(), "#groups != #headers")
    ASSERT(markers.size() == colours.size(), "#markers != #colours")
@@ -113,32 +116,32 @@ int harvest(const char* output, const char* config) {
    TH1* h[nfiles];
 
    for (std::size_t j = 0; j < nfiles; ++j) {
-      f[j] = new TFile(files[j].c_str(), "read");
-      t[j] = (TTree*)f[j]->Get(trees[j].c_str());
+      f[j] = new TFile(files[j].data(), "read");
+      t[j] = (TTree*)f[j]->Get(trees[j].data());
 
       switch (type) {
          case 0:
             if (xbins.empty())
-               h1[j] = new TH1D(Form("hf%zu%s", j, tags[j].c_str()),
-                     labels[j].c_str(), nbins[0], rmin[0], rmax[0]);
+               h1[j] = new TH1D(Form("hf%zu%s", j, tags[j].data()),
+                     labels[j].data(), nbins[0], xrange[0], xrange[1]);
             else
-               h1[j] = new TH1D(Form("hf%zu%s", j, tags[j].c_str()),
-                     labels[j].c_str(), nbins[0], &xbins[0]);
+               h1[j] = new TH1D(Form("hf%zu%s", j, tags[j].data()),
+                     labels[j].data(), nbins[0], &xbins[0]);
             h[j] = h1[j];
             break;
          case 1:
-            h2[j] = new TH2D(Form("hf%zu%s", j, tags[j].c_str()),
-                  labels[j].c_str(), nbins[0], rmin[0], rmax[0],
-                  nbins[1], rmin[1], rmin[1]);
+            h2[j] = new TH2D(Form("hf%zu%s", j, tags[j].data()),
+                  labels[j].data(), nbins[0], xrange[0], xrange[1],
+                  nbins[1], yrange[0], yrange[1]);
             h[j] = h2[j];
             break;
          case 2:
             if (xbins.empty())
-               hp[j] = new TProfile(Form("hf%zu%s", j, tags[j].c_str()),
-                     labels[j].c_str(), nbins[0], rmin[0], rmax[0]);
+               hp[j] = new TProfile(Form("hf%zu%s", j, tags[j].data()),
+                     labels[j].data(), nbins[0], xrange[0], xrange[1]);
             else
-               hp[j] = new TProfile(Form("hf%zu%s", j, tags[j].c_str()),
-                     labels[j].c_str(), nbins[0], &xbins[0]);
+               hp[j] = new TProfile(Form("hf%zu%s", j, tags[j].data()),
+                     labels[j].data(), nbins[0], &xbins[0]);
             h[j] = hp[j];
             break;
          default:
@@ -146,8 +149,8 @@ int harvest(const char* output, const char* config) {
       }
 
       if (!common.empty()) selections[j] += (" && " + common);
-      t[j]->Draw(Form("%s>>hf%zu%s", vars[j].c_str(), j, tags[j].c_str()),
-            selections[j].c_str(), "goff");
+      t[j]->Draw(Form("%s>>hf%zu%s", vars[j].data(), j, tags[j].data()),
+            selections[j].data(), "goff");
 
       switch (normalise) {
          case 0: break;
@@ -156,9 +159,9 @@ int harvest(const char* output, const char* config) {
          case 3: h[j]->Scale(1. / t[j]->GetEntries()); break;
          case 4: h[j]->Scale(1. / t[j]->GetEntries(), "width"); break;
          case 5: h[j]->Scale(1. / t[j]->GetEntries(
-            eventsel.c_str())); break;
+            eventsel.data())); break;
          case 6: h[j]->Scale(1. / t[j]->GetEntries(
-            eventsel.c_str()), "width"); break;
+            eventsel.data()), "width"); break;
          default: break;
       }
    }
@@ -187,14 +190,14 @@ int harvest(const char* output, const char* config) {
       }
 
       if (!legends[j].empty()) {
-         l1->AddEntry(h[j], legends[j].c_str(), "pl"); }
+         l1->AddEntry(h[j], legends[j].data(), "pl"); }
    }
 
    if (autorange) {
       if (amax > amin * 1.08) amin = 0;
       hframe->SetAxisRange(amin * 0.8, amax * 1.44, "Y");
-   } else if (rmin.size() > 1 && rmax.size() > 1) {
-      hframe->SetAxisRange(rmin[1], rmax[1], "Y");
+   } else if (!yrange.empty()) {
+      hframe->SetAxisRange(yrange[0], yrange[1], "Y");
    }
 
    int cheight = splitcanvas ? csize[1] * 1.2 : csize[1];
@@ -248,13 +251,13 @@ int harvest(const char* output, const char* config) {
          switch (ratiotype) {
             case 0:
                hr1[j] = (TH1D*)h1[j]->Clone(
-                  Form("hr1f%zu%s", j, tags[j].c_str()));
+                  Form("hr1f%zu%s", j, tags[j].data()));
                hr1[j]->Divide(h1[k]);
                hr1[j]->Draw(drawopts[j].data());
                break;
             case 1:
                gr1[j] = new TGraphAsymmErrors(h1[j]->GetNbinsX() + 2);
-               gr1[j]->SetName(Form("gr1f%zu%s", j, tags[j].c_str()));
+               gr1[j]->SetName(Form("gr1f%zu%s", j, tags[j].data()));
                gr1[j]->Divide(h1[j], h1[k], "c1=0.683 b(1,1) mode");
                hstyle(gr1[j], markers[j], colours[j], 0.8);
                gr1[j]->Draw(drawopts[j].data());
@@ -270,10 +273,10 @@ int harvest(const char* output, const char* config) {
 
    TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(13);
    for (std::size_t l = 0; l < text.size(); ++l)
-      t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].c_str());
+      t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].data());
 
-   c1->SaveAs(Form("figs/%s-%s.pdf", filename.c_str(), output));
-   c1->SaveAs(Form("figs/%s-%s.png", filename.c_str(), output));
+   c1->SaveAs(Form("figs/%s-%s.pdf", filename.data(), output));
+   c1->SaveAs(Form("figs/%s-%s.png", filename.data(), output));
    delete c1;
 
    TFile* fout = new TFile(Form("data/%s.root", output), "update");
