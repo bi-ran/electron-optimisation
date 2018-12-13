@@ -206,6 +206,7 @@ int harvest(const char* output, const char* config) {
       TPad* t2 = new TPad("p2", "", 0, 0, 1, 0.25);
       t2->SetTopMargin(0); t2->SetBottomMargin(0.32);
       t2->Draw(); t2->SetNumber(2);
+
       c1->cd(1);
 
       hframe->GetXaxis()->SetLabelOffset(99);
@@ -213,16 +214,17 @@ int harvest(const char* output, const char* config) {
    }
 
    gPad->SetLogx(logscale[0]);
-   gPad->SetLogy(logscale[1]);
 
    if (!drawratio || splitcanvas) {
+      gPad->SetLogy(logscale[1]);
+
       hframe->Draw("axis");
       for (std::size_t j = 0; j < nfiles; ++j)
          h[j]->Draw(drawopts[j].data());
    }
 
    if (drawratio) {
-      c1->cd(splitcanvas);
+      c1->cd(splitcanvas + 1);
 
       hrframe = (TH1D*)h[0]->Clone("hrframe");
       set_ratio_style(hrframe, 16, 13);
@@ -262,7 +264,7 @@ int harvest(const char* output, const char* config) {
       }
    }
 
-   c1->cd(0);
+   c1->cd(1);
 
    l1->Draw();
 
