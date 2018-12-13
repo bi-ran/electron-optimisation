@@ -168,13 +168,13 @@ int harvest(const char* output, const char* config) {
 
    hframe = (TH1D*)h[0]->Clone("hframe");
 
-   float lmaxy = 0.835;
-   float lminy = lmaxy - 0.04 * (nonempty + headers.size());
+   float lmaxy = 0.84;
+   float lminy = lmaxy - 0.045 * (nonempty + headers.size());
    TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
    lstyle(l1, 43, 12);
 
    for (std::size_t j = 0; j < nfiles; ++j) {
-      hstyle(h[j], markers[j], colours[j], 0.8);
+      hstyle(h[j], markers[j], colours[j], 0.7);
 
       if (nbins.size() == 1) {
          if (logscale[1]) { amin = std::min(amin, h[j]->GetMinimum(0)); }
@@ -185,8 +185,8 @@ int harvest(const char* output, const char* config) {
       unsigned k = std::abs(std::distance(groups.begin(), std::find(
          groups.begin(), groups.end(), j)));
       if (k < groups.size() && !headers[k].empty()) {
-         TLegendEntry* e1 = l1->AddEntry((TObject*)0, headers[k].c_str(), "");
-         e1->SetTextFont(63); e1->SetTextSize(13);
+         TLegendEntry* e1 = l1->AddEntry((TObject*)0, headers[k].data(), "");
+         e1->SetTextFont(63); e1->SetTextSize(12);
       }
 
       if (!legends[j].empty()) {
@@ -200,8 +200,7 @@ int harvest(const char* output, const char* config) {
       hframe->SetAxisRange(yrange[0], yrange[1], "Y");
    }
 
-   int cheight = splitcanvas ? csize[1] * 1.2 : csize[1];
-   TCanvas* c1 = new TCanvas("c1", "", csize[0], cheight);
+   TCanvas* c1 = new TCanvas("c1", "", csize[0], csize[1]);
    if (drawratio && splitcanvas) {
       TPad* t1 = new TPad("p1", "", 0, 0.25, 1, 1);
       t1->SetTopMargin(0.11111); t1->SetBottomMargin(0);
@@ -221,6 +220,7 @@ int harvest(const char* output, const char* config) {
    if (!drawratio || splitcanvas) {
       gPad->SetLogy(logscale[1]);
 
+      hstyle_title_label_size(hframe, 14, 12);
       hframe->Draw("axis");
       for (std::size_t j = 0; j < nfiles; ++j)
          h[j]->Draw(drawopts[j].data());
@@ -230,7 +230,6 @@ int harvest(const char* output, const char* config) {
       c1->cd(splitcanvas + 1);
 
       hrframe = (TH1D*)h[0]->Clone("hrframe");
-      set_ratio_style(hrframe, 16, 13);
       switch (ratiotype) {
          case 0:
             hrframe->SetAxisRange(0, 2, "Y");
@@ -242,6 +241,8 @@ int harvest(const char* output, const char* config) {
             hrframe->SetYTitle("efficiency");
             break;
       }
+
+      hstyle_title_label_size(hrframe, 14, 12);
       hrframe->Draw("axis");
 
       for (std::size_t j = 0; j < nfiles; ++j) {
@@ -271,7 +272,7 @@ int harvest(const char* output, const char* config) {
 
    l1->Draw();
 
-   TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(13);
+   TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(12);
    for (std::size_t l = 0; l < text.size(); ++l)
       t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].data());
 

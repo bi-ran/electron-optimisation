@@ -26,7 +26,7 @@ void watermark() {
 #include "TH1.h"
 
 template<typename T>
-void set_ratio_style(T* h, uint32_t title_size, uint32_t label_size) {
+void hstyle_title_label_size(T* h, uint32_t title_size, uint32_t label_size) {
    float npixelspad = gPad->GetWh() * gPad->GetAbsHNDC();
 
    h->GetXaxis()->SetLabelSize(label_size / npixelspad);
