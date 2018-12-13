@@ -28,6 +28,9 @@
       return 1;                        \
    }
 
+#define VECTOR_DEFAULT(var, n, val)          \
+   if (var.empty()) { var.assign(n, val); }
+
 int get_baseline(std::vector<int> groups, uint32_t index);
 void set_ratio_style(TH1D* h);
 
