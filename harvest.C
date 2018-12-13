@@ -32,7 +32,6 @@
    if (var.empty()) { var.assign(n, val); }
 
 int get_baseline(std::vector<int> groups, uint32_t index);
-void set_ratio_style(TH1D* h);
 
 int harvest(const char* output, const char* config) {
    configurer* conf = new configurer(config);
@@ -290,17 +289,6 @@ int get_baseline(std::vector<int> groups, uint32_t index) {
          max = g;
 
    return max;
-}
-
-void set_ratio_style(TH1D* h) {
-   float npixelspad = gPad->GetWh() * gPad->GetAbsHNDC();
-
-   h->GetXaxis()->SetLabelSize(13 / npixelspad);
-   h->GetXaxis()->SetTitleSize(16 / npixelspad);
-   h->GetYaxis()->SetLabelSize(13 / npixelspad);
-   h->GetYaxis()->SetTitleSize(16 / npixelspad);
-   h->GetYaxis()->CenterTitle();
-   h->GetYaxis()->SetTitleOffset(0.5);
 }
 
 int main(int argc, char* argv[]) {
