@@ -32,7 +32,7 @@
 #define VECTOR_DEFAULT(var, n, val)          \
    if (var.empty()) { var.assign(n, val); }
 
-int get_baseline(std::vector<int> groups, uint32_t index);
+int get_baseline(std::vector<uint32_t>& groups, uint32_t index);
 
 int harvest(const char* output, const char* config) {
    configurer* conf = new configurer(config);
@@ -51,14 +51,14 @@ int harvest(const char* output, const char* config) {
    auto eventsel = conf->get<std::string>("eventsel");
    auto text = conf->get<std::vector<std::string>>("text");
 
-   auto nbins = conf->get<std::vector<int>>("nbins");
+   auto nbins = conf->get<std::vector<uint32_t>>("nbins");
    auto xbins = conf->get<std::vector<float>>("xbins");
    auto xrange = conf->get<std::vector<float>>("xrange");
    auto ybins = conf->get<std::vector<float>>("ybins");
    auto yrange = conf->get<std::vector<float>>("yrange");
    auto autorange = conf->get<bool>("autorange");
 
-   auto csize = conf->get<std::vector<int>>("csize");
+   auto csize = conf->get<std::vector<uint32_t>>("csize");
    auto logscale = conf->get<std::vector<bool>>("logscale");
 
    auto splitcanvas = conf->get<bool>("splitcanvas");
@@ -67,7 +67,7 @@ int harvest(const char* output, const char* config) {
 
    auto normalise = conf->get<int>("normalise");
 
-   auto groups = conf->get<std::vector<int>>("groups");
+   auto groups = conf->get<std::vector<uint32_t>>("groups");
    auto headers = conf->get<std::vector<std::string>>("headers");
 
    auto lines = conf->get<std::vector<float>>("lines");
@@ -99,6 +99,9 @@ int harvest(const char* output, const char* config) {
    ASSERT(colours.size() == files.size(), "#files != #colours")
    ASSERT(logscale.size() == 2, "(logx, logy)")
    ASSERT(lines.size() % 4 == 0, "line coordinates: n * (x0, y0, x1, y1)")
+
+   if (!xbins.empty()) {
+      ASSERT(xbins.size() == nbins[0] + 1, "#xbins != #nbins[0]+1") }
 
    if (drawratio && lines.empty()) {
       lncanvas.assign(1, splitcanvas);
@@ -326,10 +329,10 @@ int harvest(const char* output, const char* config) {
    return 0;
 }
 
-int get_baseline(std::vector<int> groups, uint32_t index) {
+int get_baseline(std::vector<uint32_t>& groups, uint32_t index) {
    int max = -1;
    for (const auto& g : groups)
-      if (g > max && g <= (int)index)
+      if ((signed)(g - max) > 0 && g <= index)
          max = g;
 
    return max;
