@@ -12,6 +12,7 @@
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TLatex.h"
+#include "TLine.h"
 
 #include <algorithm>
 #include <fstream>
@@ -69,6 +70,9 @@ int harvest(const char* output, const char* config) {
    auto groups = conf->get<std::vector<int>>("groups");
    auto headers = conf->get<std::vector<std::string>>("headers");
 
+   auto lines = conf->get<std::vector<float>>("lines");
+   auto lncanvas = conf->get<std::vector<uint32_t>>("lncanvas");
+
    auto markers = conf->get<std::vector<int>>("markers");
    auto colours = conf->get<std::vector<int>>("colours");
    auto drawopts = conf->get<std::vector<std::string>>("drawopts");
@@ -94,6 +98,19 @@ int harvest(const char* output, const char* config) {
    ASSERT(markers.size() == colours.size(), "#markers != #colours")
    ASSERT(colours.size() == files.size(), "#files != #colours")
    ASSERT(logscale.size() == 2, "(logx, logy)")
+   ASSERT(lines.size() % 4 == 0, "line coordinates: n * (x0, y0, x1, y1)")
+
+   if (drawratio && lines.empty()) {
+      lncanvas.assign(1, splitcanvas);
+
+      if (xbins.empty()) {
+         lines.push_back(xrange[0]); lines.push_back(1);
+         lines.push_back(xrange[1]); lines.push_back(1);
+      } else {
+         lines.push_back(xbins[0]); lines.push_back(1);
+         lines.push_back(xbins[nbins[0]]); lines.push_back(1);
+      }
+   }
 
    std::size_t nfiles = files.size();
 
@@ -112,6 +129,8 @@ int harvest(const char* output, const char* config) {
    TH1D* hframe; TH1D* hrframe;
    TH1D* h1[nfiles]; TH2D* h2[nfiles]; TProfile* hp[nfiles];
    TH1D* hr1[nfiles]; TGraphAsymmErrors* gr1[nfiles];
+
+   TLine* ls[lines.size()/4];
 
    TH1* h[nfiles];
 
@@ -209,11 +228,11 @@ int harvest(const char* output, const char* config) {
       t2->SetTopMargin(0); t2->SetBottomMargin(0.32);
       t2->Draw(); t2->SetNumber(2);
 
-      c1->cd(1);
-
       hframe->GetXaxis()->SetLabelOffset(99);
       hframe->GetXaxis()->SetTitleOffset(99);
    }
+
+   c1->cd(1);
 
    gPad->SetLogx(logscale[0]);
 
@@ -222,8 +241,6 @@ int harvest(const char* output, const char* config) {
 
       hstyle_title_label_size(hframe, 14, 12);
       hframe->Draw("axis");
-      for (std::size_t j = 0; j < nfiles; ++j)
-         h[j]->Draw(drawopts[j].data());
    }
 
    if (drawratio) {
@@ -244,6 +261,27 @@ int harvest(const char* output, const char* config) {
 
       hstyle_title_label_size(hrframe, 14, 12);
       hrframe->Draw("axis");
+   }
+
+   c1->cd(1);
+
+   for (std::size_t j = 0; j < lines.size(); j=j+4) {
+      if (j/4 < lncanvas.size()) { c1->cd(lncanvas[j/4] + 1); }
+
+      ls[j/4] = new TLine(lines[j], lines[j+1], lines[j+2], lines[j+3]);
+      ls[j/4]->SetLineStyle(7);
+      ls[j/4]->Draw();
+   }
+
+   c1->cd(1);
+
+   if (!drawratio || splitcanvas) {
+      for (std::size_t j = 0; j < nfiles; ++j)
+         h[j]->Draw(drawopts[j].data());
+   }
+
+   if (drawratio) {
+      c1->cd(splitcanvas + 1);
 
       for (std::size_t j = 0; j < nfiles; ++j) {
          auto k = get_baseline(groups, j);
