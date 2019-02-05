@@ -85,12 +85,15 @@ int harvest(const char* output, const char* config) {
    VECTOR_DEFAULT(drawopts, vars.size(), "p e same");
 
    ASSERT(!files.empty(), "no files provided")
-   ASSERT(files.size() == trees.size(), "#files != #trees")
-   ASSERT(files.size() == vars.size(), "#files != #vars")
+   ASSERT(files.size() == trees.size() || trees.empty(),
+      "#files != #trees")
+   ASSERT(files.size() == vars.size() || vars.empty(),
+      "#files != #vars")
+   ASSERT(files.size() == selections.size() || selections.empty(),
+      "#files != #selections")
    ASSERT(files.size() == tags.size(), "#files != #tags")
    ASSERT(files.size() == labels.size(), "#files != #labels")
    ASSERT(files.size() == legends.size(), "#files != #legends")
-   ASSERT(files.size() == selections.size(), "#files != #selections")
    ASSERT(xrange.size() == 2, "invalid x axis range")
    ASSERT(yrange.size() == 2, "invalid y axis range")
    ASSERT(csize.size() == 2, "invalid canvas size")
@@ -166,13 +169,19 @@ int harvest(const char* output, const char* config) {
                      labels[j].data(), nbins[0], &xbins[0]);
             h[j] = hp[j];
             break;
+         case 3:
+            h1[j] = (TH1D*)f[j]->Get(trees[j].data())->Clone(
+               Form("hf%zu%s", j, tags[j].data()));
+            break;
          default:
             break;
       }
 
-      if (!common.empty()) selections[j] += (" && " + common);
-      t[j]->Draw(Form("%s>>hf%zu%s", vars[j].data(), j, tags[j].data()),
-            selections[j].data(), "goff");
+      if (type < 3) {
+         if (!common.empty()) selections[j] += (" && " + common);
+         t[j]->Draw(Form("%s>>hf%zu%s", vars[j].data(), j, tags[j].data()),
+               selections[j].data(), "goff");
+      }
 
       switch (normalise) {
          case 0: break;
