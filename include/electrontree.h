@@ -150,12 +150,13 @@
 class electrontree {
    public:
       electrontree() { VARBRANCHES(INVALID) };
-      electrontree(TTree* t) : electrontree() { branch(t); };
+      electrontree(TTree* t, bool isdata)
+         : electrontree() { branch(t); this->isdata = isdata; };
       ~electrontree() {};
 
       void branch(TTree* t) {
          VARBRANCHES(CREATE)
-         if (!isData) {
+         if (!isdata) {
             VECBRANCHESMC(CREATE) }
          VECBRANCHESDATA(CREATE)
          NEWVARBRANCHES(CREATE)
@@ -169,12 +170,15 @@ class electrontree {
 
       void copy(eventtree* evtt) {
          VARBRANCHES(VARCOPY)
-         if (!isData) {
+         if (!isdata) {
             VECBRANCHESMC(VECCOPY) }
          VECBRANCHESDATA(VECCOPY)
       };
 
       BRANCHES(DECLARE)
+
+   private:
+      bool isdata;
 };
 
 #endif  /* ELECTRONTREE_H */
