@@ -6,6 +6,7 @@
 #include "include/constants.h"
 #include "include/eventtree.h"
 #include "include/electrontree.h"
+#include "include/l1tree.h"
 
 #include "git/config/configurer.h"
 
@@ -31,6 +32,7 @@ int extract(const char* config, const char* output) {
    TChain* chlt = new TChain("hltanalysis/HltTree");
    TChain* ce20 = new TChain("hltobject/HLT_HIEle20Gsf_v");
    TChain* ce10e10m50 = new TChain("hltobject/HLT_HIDoubleEle10GsfMass50_v");
+   TChain* cl1 = new TChain("l1object/L1UpgradeFlatTree");
 
    for (const auto& file : files) {
       ceg->Add(file.data());
@@ -38,6 +40,7 @@ int extract(const char* config, const char* output) {
       chlt->Add(file.data());
       ce20->Add(file.data());
       ce10e10m50->Add(file.data());
+      cl1->Add(file.data());
    }
 
    ceg->SetBranchStatus("*", 0);
@@ -45,6 +48,7 @@ int extract(const char* config, const char* output) {
    chlt->SetBranchStatus("*", 0);
    ce20->SetBranchStatus("*", 0);
    ce10e10m50->SetBranchStatus("*", 0);
+   cl1->SetBranchStatus("*", 0);
 
    int hiBin;
    cevt->SetBranchStatus("hiBin", 1);
@@ -77,6 +81,7 @@ int extract(const char* config, const char* output) {
    ce10e10m50->SetBranchAddress("phi", &e10e10m50_phi);
 
    eventtree* evtt = new eventtree(ceg, isdata);
+   l1tree* l1ot = new l1tree(cl1, isdata);
 
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
@@ -96,6 +101,7 @@ int extract(const char* config, const char* output) {
       chlt->GetEntry(i);
       ce20->GetEntry(i);
       ce10e10m50->GetEntry(i);
+      cl1->GetEntry(i);
 
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
@@ -144,6 +150,7 @@ int extract(const char* config, const char* output) {
          }
       }
 
+      elet->copy(l1ot);
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;

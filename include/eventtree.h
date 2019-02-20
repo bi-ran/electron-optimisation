@@ -143,6 +143,8 @@ class eventtree {
 };
 
 #undef BRANCHES
+#undef BRANCHESMC
+#undef BRANCHESDATA
 #undef ZERO
 #undef DECLARE
 #undef READ

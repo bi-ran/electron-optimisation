@@ -7,12 +7,17 @@
 #include <algorithm>
 #include <iterator>
 
+#include "eventtree.h"
+#include "l1tree.h"
+
 #define BRANCHES(ACTION)                              \
    VARBRANCHES(ACTION)                                \
    NEWVARBRANCHES(ACTION)                             \
    VECBRANCHESMC(ACTION)                              \
    VECBRANCHESDATA(ACTION)                            \
    NEWVECBRANCHES(ACTION)                             \
+   L1VARBRANCHES(ACTION)                              \
+   L1VECBRANCHES(ACTION)                              \
 
 #define VARBRANCHES(ACTION)                           \
    ACTION(UInt_t, run)                                \
@@ -147,33 +152,63 @@
    ACTION(std::vector<double>, phi_e10e10m50)         \
    ACTION(std::vector<int>, n_e10e10m50)              \
 
+#define L1VARBRANCHES(ACTION)                         \
+   ACTION(short, nEGs)                                \
+
+#define L1VECBRANCHES(ACTION)                         \
+   ACTION(std::vector<float>, egEt)                   \
+   ACTION(std::vector<float>, egEta)                  \
+   ACTION(std::vector<float>, egPhi)                  \
+   ACTION(std::vector<short>, egIEt)                  \
+   ACTION(std::vector<short>, egIEta)                 \
+   ACTION(std::vector<short>, egIPhi)                 \
+   ACTION(std::vector<short>, egIso)                  \
+   ACTION(std::vector<short>, egBx)                   \
+   ACTION(std::vector<short>, egTowerIPhi)            \
+   ACTION(std::vector<short>, egTowerIEta)            \
+   ACTION(std::vector<short>, egRawEt)                \
+   ACTION(std::vector<short>, egIsoEt)                \
+   ACTION(std::vector<short>, egFootprintEt)          \
+   ACTION(std::vector<short>, egNTT)                  \
+   ACTION(std::vector<short>, egShape)                \
+   ACTION(std::vector<short>, egTowerHoE)             \
+   ACTION(std::vector<short>, egHwQual)               \
+
 #define INVALID(type, var) var = -1;
 #define DECLARE(type, var) type var;
 #define CREATE(type, var) t->Branch(#var, &var);
 #define CLEAR(type, var) var.clear();
 #define VARCOPY(type, var) var = evtt->var;
 #define VECCOPY(type, var)                                                    \
-   std::copy(evtt->var->begin(), evtt->var->end(), std::back_inserter(var));  \
+   std::copy(evtt->var->begin(), evtt->var->end(), std::back_inserter(var));
+#define L1VARCOPY(type, var) var = l1ot->var;
+#define L1VECCOPY(type, var)                                                  \
+   std::copy(l1ot->var->begin(), l1ot->var->end(), std::back_inserter(var));
 
 class electrontree {
    public:
       electrontree() { VARBRANCHES(INVALID) };
       electrontree(TTree* t, bool isdata)
-         : electrontree() { branch(t); this->isdata = isdata; };
+         : electrontree() { this->isdata = isdata; branch(t); };
       ~electrontree() {};
 
       void branch(TTree* t) {
          VARBRANCHES(CREATE)
          if (!isdata) {
             VECBRANCHESMC(CREATE) }
+         else {
+            L1VARBRANCHES(CREATE)
+            L1VECBRANCHES(CREATE) }
          VECBRANCHESDATA(CREATE)
          NEWVARBRANCHES(CREATE)
          NEWVECBRANCHES(CREATE)
       };
+
       void clear() {
          VECBRANCHESMC(CLEAR)
          VECBRANCHESDATA(CLEAR)
          NEWVECBRANCHES(CLEAR)
+         L1VECBRANCHES(CLEAR)
       };
 
       void copy(eventtree* evtt) {
@@ -183,10 +218,19 @@ class electrontree {
          VECBRANCHESDATA(VECCOPY)
       };
 
+      void copy(l1tree* l1ot) {
+         if (isdata) {
+            L1VARBRANCHES(L1VARCOPY)
+            L1VECBRANCHES(L1VECCOPY)
+         }
+      };
+
       BRANCHES(DECLARE)
 
    private:
       bool isdata;
 };
+
+#undef BRANCHES
 
 #endif  /* ELECTRONTREE_H */
