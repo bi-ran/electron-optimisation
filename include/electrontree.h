@@ -139,8 +139,12 @@
    ACTION(std::vector<int>, mcRecoMatchIndex)         \
    ACTION(std::vector<int>, hlt)                      \
    ACTION(std::vector<double>, pt_e20)                \
+   ACTION(std::vector<double>, eta_e20)               \
+   ACTION(std::vector<double>, phi_e20)               \
    ACTION(std::vector<int>, n_e20)                    \
    ACTION(std::vector<double>, pt_e10e10m50)          \
+   ACTION(std::vector<double>, eta_e10e10m50)         \
+   ACTION(std::vector<double>, phi_e10e10m50)         \
    ACTION(std::vector<int>, n_e10e10m50)              \
 
 #define INVALID(type, var) var = -1;

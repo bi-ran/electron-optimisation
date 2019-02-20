@@ -60,13 +60,21 @@ int extract(const char* config, const char* output) {
       chlt->SetBranchAddress(paths[i].data(), &hlt[i]);
    }
 
-   std::vector<double>* e20 = 0;
+   std::vector<double>* e20_pt = 0;
+   std::vector<double>* e20_eta = 0;
+   std::vector<double>* e20_phi = 0;
    ce20->SetBranchStatus("pt", 1);
-   ce20->SetBranchAddress("pt", &e20);
+   ce20->SetBranchAddress("pt", &e20_pt);
+   ce20->SetBranchAddress("eta", &e20_eta);
+   ce20->SetBranchAddress("phi", &e20_phi);
 
-   std::vector<double>* e10e10m50 = 0;
+   std::vector<double>* e10e10m50_pt = 0;
+   std::vector<double>* e10e10m50_eta = 0;
+   std::vector<double>* e10e10m50_phi = 0;
    ce10e10m50->SetBranchStatus("pt", 1);
-   ce10e10m50->SetBranchAddress("pt", &e10e10m50);
+   ce10e10m50->SetBranchAddress("pt", &e10e10m50_pt);
+   ce10e10m50->SetBranchAddress("eta", &e10e10m50_eta);
+   ce10e10m50->SetBranchAddress("phi", &e10e10m50_phi);
 
    eventtree* evtt = new eventtree(ceg, isdata);
 
@@ -142,20 +150,27 @@ int extract(const char* config, const char* output) {
       elet->ncoll = elet->isData ? 1 : ncoll(hiBin);
       elet->elePairZMass = elePairZMass;
 
-      for (auto const& o : *e20) {
+      for (uint32_t j = 0; j < e20_pt->size(); ++j) {
+         auto const& o = (*e20_pt)[i];
          if (std::find(elet->pt_e20.begin(), elet->pt_e20.end(), o)
                == elet->pt_e20.end()) {
-            elet->n_e20.push_back(std::count(e20->begin(), e20->end(), o));
-            elet->pt_e20.push_back(o);
+            elet->n_e20.push_back(std::count(
+               e20_pt->begin(), e20_pt->end(), o));
+            elet->pt_e20.push_back((*e20_pt)[j]);
+            elet->eta_e20.push_back((*e20_eta)[j]);
+            elet->phi_e20.push_back((*e20_phi)[j]);
          }
       }
 
-      for (auto const& o : *e10e10m50) {
+      for (uint32_t j = 0; j < e10e10m50_pt->size(); ++j) {
+         auto const& o = (*e10e10m50_pt)[i];
          if (std::find(elet->pt_e10e10m50.begin(), elet->pt_e10e10m50.end(), o)
                == elet->pt_e10e10m50.end()) {
             elet->n_e10e10m50.push_back(std::count(
-               e10e10m50->begin(), e10e10m50->end(), o));
-            elet->pt_e10e10m50.push_back(o);
+               e10e10m50_pt->begin(), e10e10m50_pt->end(), o));
+            elet->pt_e10e10m50.push_back((*e10e10m50_pt)[j]);
+            elet->eta_e10e10m50.push_back((*e10e10m50_eta)[j]);
+            elet->phi_e10e10m50.push_back((*e10e10m50_phi)[j]);
          }
       }
 
