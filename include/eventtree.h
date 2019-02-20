@@ -5,11 +5,11 @@
 
 #include <vector>
 
-#define BRANCHES(ACTION)                              \
-   BRANCHESMC(ACTION)                                 \
-   BRANCHESDATA(ACTION)                               \
+#define EVTBRANCHES(ACTION)                           \
+   EVTMCBRANCHES(ACTION)                              \
+   EVTDATABRANCHES(ACTION)                            \
 
-#define BRANCHESMC(ACTION)                            \
+#define EVTMCBRANCHES(ACTION)                         \
    ACTION(Int_t, nPUInfo)                             \
    ACTION(std::vector<int>*, nPU)                     \
    ACTION(std::vector<int>*, puBX)                    \
@@ -39,7 +39,7 @@
    ACTION(std::vector<float>*, mcTrkIsoDR03)          \
    ACTION(std::vector<float>*, mcTrkIsoDR04)          \
 
-#define BRANCHESDATA(ACTION)                          \
+#define EVTDATABRANCHES(ACTION)                       \
    ACTION(UInt_t, run)                                \
    ACTION(ULong64_t, event)                           \
    ACTION(UInt_t, lumis)                              \
@@ -121,32 +121,25 @@
    ACTION(std::vector<int>*, elepassConversionVeto)   \
    ACTION(std::vector<float>*, eleEffAreaTimesRho)    \
 
-#define ZERO(type, var) var = 0;
-#define DECLARE(type, var) type var;
-#define READ(type, var)                               \
+#define EVTZERO(type, var) var = 0;
+#define EVTDECLARE(type, var) type var;
+#define EVTREAD(type, var)                            \
    t->SetBranchStatus(#var, 1);                       \
    t->SetBranchAddress(#var, &var);                   \
 
 class eventtree {
    public:
-      eventtree() { BRANCHES(ZERO) };
+      eventtree() { EVTBRANCHES(EVTZERO) };
       eventtree(TTree* t, bool isdata) : eventtree() { read(t, isdata); }
       ~eventtree() { };
 
       void read(TTree* t, bool isdata) {
          if (!isdata) {
-            BRANCHESMC(READ) }
-         BRANCHESDATA(READ)
+            EVTMCBRANCHES(EVTREAD) }
+         EVTDATABRANCHES(EVTREAD)
       };
 
-      BRANCHES(DECLARE)
+      EVTBRANCHES(EVTDECLARE)
 };
-
-#undef BRANCHES
-#undef BRANCHESMC
-#undef BRANCHESDATA
-#undef ZERO
-#undef DECLARE
-#undef READ
 
 #endif  /* EVENTTREE_H */

@@ -231,6 +231,4 @@ class electrontree {
       bool isdata;
 };
 
-#undef BRANCHES
-
 #endif  /* ELECTRONTREE_H */

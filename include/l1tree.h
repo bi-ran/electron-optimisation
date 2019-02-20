@@ -5,10 +5,10 @@
 
 #include <vector>
 
-#define BRANCHES(ACTION)                              \
-   BRANCHESDATA(ACTION)                               \
+#define L1BRANCHES(ACTION)                            \
+   L1DATABRANCHES(ACTION)                             \
 
-#define BRANCHESDATA(ACTION)                          \
+#define L1DATABRANCHES(ACTION)                        \
    ACTION(short, nEGs)                                \
    ACTION(std::vector<float>*, egEt)                  \
    ACTION(std::vector<float>*, egEta)                 \
@@ -28,31 +28,24 @@
    ACTION(std::vector<short>*, egTowerHoE)            \
    ACTION(std::vector<short>*, egHwQual)              \
 
-#define ZERO(type, var) var = 0;
-#define DECLARE(type, var) type var;
-#define READ(type, var)                               \
+#define L1ZERO(type, var) var = 0;
+#define L1DECLARE(type, var) type var;
+#define L1READ(type, var)                             \
    t->SetBranchStatus(#var, 1);                       \
    t->SetBranchAddress(#var, &var);                   \
 
 class l1tree {
    public:
-      l1tree() { BRANCHES(ZERO) };
+      l1tree() { L1BRANCHES(L1ZERO) };
       l1tree(TTree* t, bool isdata) : l1tree() { read(t, isdata); }
       ~l1tree() { };
 
       void read(TTree* t, bool isdata) {
          if (isdata) {
-            BRANCHESDATA(READ) }
+            L1DATABRANCHES(L1READ) }
       };
 
-      BRANCHES(DECLARE)
+      L1BRANCHES(L1DECLARE)
 };
-
-#undef BRANCHES
-#undef BRANCHESMC
-#undef BRANCHESDATA
-#undef ZERO
-#undef DECLARE
-#undef READ
 
 #endif  /* L1TREE_H */
