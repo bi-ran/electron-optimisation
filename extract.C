@@ -29,16 +29,22 @@ int extract(const char* config, const char* output) {
    TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
    TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
    TChain* chlt = new TChain("hltanalysis/HltTree");
+   TChain* ce20 = new TChain("hltobject/HLT_HIEle20Gsf_v");
+   TChain* ce10e10m50 = new TChain("hltobject/HLT_HIDoubleEle10GsfMass50_v");
 
    for (const auto& file : files) {
       ceg->Add(file.data());
       cevt->Add(file.data());
       chlt->Add(file.data());
+      ce20->Add(file.data());
+      ce10e10m50->Add(file.data());
    }
 
    ceg->SetBranchStatus("*", 0);
    cevt->SetBranchStatus("*", 0);
    chlt->SetBranchStatus("*", 0);
+   ce20->SetBranchStatus("*", 0);
+   ce10e10m50->SetBranchStatus("*", 0);
 
    int hiBin;
    cevt->SetBranchStatus("hiBin", 1);
@@ -53,6 +59,14 @@ int extract(const char* config, const char* output) {
       chlt->SetBranchStatus(paths[i].data(), 1);
       chlt->SetBranchAddress(paths[i].data(), &hlt[i]);
    }
+
+   std::vector<double>* e20 = 0;
+   ce20->SetBranchStatus("pt", 1);
+   ce20->SetBranchAddress("pt", &e20);
+
+   std::vector<double>* e10e10m50 = 0;
+   ce10e10m50->SetBranchStatus("pt", 1);
+   ce10e10m50->SetBranchAddress("pt", &e10e10m50);
 
    eventtree* evtt = new eventtree(ceg, isdata);
 
@@ -72,6 +86,8 @@ int extract(const char* config, const char* output) {
       ceg->GetEntry(i);
       cevt->GetEntry(i);
       chlt->GetEntry(i);
+      ce20->GetEntry(i);
+      ce10e10m50->GetEntry(i);
 
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
@@ -125,6 +141,23 @@ int extract(const char* config, const char* output) {
       elet->hiHF = hiHF;
       elet->ncoll = elet->isData ? 1 : ncoll(hiBin);
       elet->elePairZMass = elePairZMass;
+
+      for (auto const& o : *e20) {
+         if (std::find(elet->pt_e20.begin(), elet->pt_e20.end(), o)
+               == elet->pt_e20.end()) {
+            elet->n_e20.push_back(std::count(e20->begin(), e20->end(), o));
+            elet->pt_e20.push_back(o);
+         }
+      }
+
+      for (auto const& o : *e10e10m50) {
+         if (std::find(elet->pt_e10e10m50.begin(), elet->pt_e10e10m50.end(), o)
+               == elet->pt_e10e10m50.end()) {
+            elet->n_e10e10m50.push_back(std::count(
+               e10e10m50->begin(), e10e10m50->end(), o));
+            elet->pt_e10e10m50.push_back(o);
+         }
+      }
 
       tout->Fill();
    }
