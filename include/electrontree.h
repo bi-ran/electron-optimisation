@@ -32,7 +32,6 @@
    ACTION(int, hiBin)                                 \
    ACTION(float, hiHF)                                \
    ACTION(float, ncoll)                               \
-   ACTION(float, elePairZMass)                        \
 
 #define VECBRANCHESMC(ACTION)                         \
    ACTION(std::vector<int>, nPU)                      \

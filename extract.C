@@ -134,28 +134,11 @@ int extract(const char* config, const char* output) {
          }
       }
 
-      float elePairZMass = -1;
-      for (int j=0; j<evtt->nEle; ++j) {
-         for (int k=j+1; k<evtt->nEle; ++k) {
-            /* reconstruct Z peak */
-            TLorentzVector e1; TLorentzVector e2;
-            e1.SetPtEtaPhiM((*evtt->elePt)[j], (*evtt->eleEta)[j],
-               (*evtt->elePhi)[j], 0.000511);
-            e2.SetPtEtaPhiM((*evtt->elePt)[k], (*evtt->eleEta)[k],
-               (*evtt->elePhi)[k], 0.000511);
-
-            TLorentzVector zcand = e1 + e2;
-            if (std::abs(zcand.M() - 91.1876) > elePairZMass)
-               elePairZMass = zcand.M();
-         }
-      }
-
       elet->copy(l1ot);
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;
       elet->ncoll = elet->isData ? 1 : ncoll(hiBin);
-      elet->elePairZMass = elePairZMass;
 
       for (uint32_t j = 0; j < e20_pt->size(); ++j) {
          auto const& o = (*e20_pt)[i];
