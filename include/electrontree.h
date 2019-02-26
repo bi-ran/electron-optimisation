@@ -217,8 +217,8 @@ class electrontree {
          VECBRANCHESDATA(VECCOPY)
       };
 
-      void copy(l1tree* l1ot) {
-         if (isdata) {
+      void copy(l1tree* l1ot, bool hasl1) {
+         if (hasl1) {
             L1VARBRANCHES(L1VARCOPY)
             L1VECBRANCHES(L1VECCOPY)
          }

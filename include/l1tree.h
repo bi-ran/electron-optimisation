@@ -37,11 +37,11 @@
 class l1tree {
    public:
       l1tree() { L1BRANCHES(L1ZERO) };
-      l1tree(TTree* t, bool isdata) : l1tree() { read(t, isdata); }
+      l1tree(TTree* t, bool hasl1) : l1tree() { read(t, hasl1); }
       ~l1tree() { };
 
-      void read(TTree* t, bool isdata) {
-         if (isdata) {
+      void read(TTree* t, bool hasl1) {
+         if (hasl1) {
             L1DATABRANCHES(L1READ) }
       };
 

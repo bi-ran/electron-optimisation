@@ -23,6 +23,7 @@ int extract(const char* config, const char* output) {
 
    auto files = conf->get<std::vector<std::string>>("files");
    auto paths = conf->get<std::vector<std::string>>("paths");
+   auto hasl1 = conf->get<bool>("hasl1");
    auto isdata = conf->get<bool>("isdata");
 
    auto maxentries = conf->get<uint64_t>("maxentries");
@@ -81,7 +82,7 @@ int extract(const char* config, const char* output) {
    ce10e10m50->SetBranchAddress("phi", &e10e10m50_phi);
 
    eventtree* evtt = new eventtree(ceg, isdata);
-   l1tree* l1ot = new l1tree(cl1, isdata);
+   l1tree* l1ot = new l1tree(cl1, hasl1);
 
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
@@ -134,7 +135,7 @@ int extract(const char* config, const char* output) {
          }
       }
 
-      elet->copy(l1ot);
+      elet->copy(l1ot, hasl1);
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;
