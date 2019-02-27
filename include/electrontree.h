@@ -7,227 +7,225 @@
 #include <algorithm>
 #include <iterator>
 
+#include "common.h"
 #include "eventtree.h"
 #include "l1tree.h"
 
-#define BRANCHES(ACTION)                              \
-   VARBRANCHES(ACTION)                                \
-   NEWVARBRANCHES(ACTION)                             \
-   VECBRANCHESMC(ACTION)                              \
-   VECBRANCHESDATA(ACTION)                            \
-   NEWVECBRANCHES(ACTION)                             \
-   L1VARBRANCHES(ACTION)                              \
-   L1VECBRANCHES(ACTION)                              \
+#define BRANCHES(ACTION, ...)                                           \
+   B_VAR_D(ACTION, ## __VA_ARGS__)                                      \
+   B_VAR_L(ACTION, ## __VA_ARGS__)                                      \
+   B_VAR_M(ACTION, ## __VA_ARGS__)                                      \
+   B_VAR_N(ACTION, ## __VA_ARGS__)                                      \
+   B_VEC_D(ACTION, ## __VA_ARGS__)                                      \
+   B_VEC_L(ACTION, ## __VA_ARGS__)                                      \
+   B_VEC_M(ACTION, ## __VA_ARGS__)                                      \
+   B_VEC_N(ACTION, ## __VA_ARGS__)                                      \
 
-#define VARBRANCHES(ACTION)                           \
-   ACTION(UInt_t, run)                                \
-   ACTION(ULong64_t, event)                           \
-   ACTION(UInt_t, lumis)                              \
-   ACTION(Bool_t, isData)                             \
-   ACTION(Int_t, nPUInfo)                             \
-   ACTION(Int_t, nMC)                                 \
-   ACTION(Int_t, nEle)                                \
+#define B_VAR_D(ACTION, ...)                                            \
+   ACTION(UInt_t, run, ## __VA_ARGS__)                                  \
+   ACTION(ULong64_t, event, ## __VA_ARGS__)                             \
+   ACTION(UInt_t, lumis, ## __VA_ARGS__)                                \
+   ACTION(Int_t, nEle, ## __VA_ARGS__)                                  \
 
-#define NEWVARBRANCHES(ACTION)                        \
-   ACTION(int, hiBin)                                 \
-   ACTION(float, hiHF)                                \
-   ACTION(float, ncoll)                               \
+#define B_VAR_L(ACTION, ...)                                            \
+   ACTION(short, nEGs, ## __VA_ARGS__)                                  \
 
-#define VECBRANCHESMC(ACTION)                         \
-   ACTION(std::vector<int>, nPU)                      \
-   ACTION(std::vector<int>, puBX)                     \
-   ACTION(std::vector<float>, puTrue)                 \
-   ACTION(std::vector<int>, mcPID)                    \
-   ACTION(std::vector<int>, mcStatus)                 \
-   ACTION(std::vector<float>, mcVtx_x)                \
-   ACTION(std::vector<float>, mcVtx_y)                \
-   ACTION(std::vector<float>, mcVtx_z)                \
-   ACTION(std::vector<float>, mcPt)                   \
-   ACTION(std::vector<float>, mcEta)                  \
-   ACTION(std::vector<float>, mcPhi)                  \
-   ACTION(std::vector<float>, mcE)                    \
-   ACTION(std::vector<float>, mcEt)                   \
-   ACTION(std::vector<float>, mcMass)                 \
-   ACTION(std::vector<int>, mcParentage)              \
-   ACTION(std::vector<int>, mcMomPID)                 \
-   ACTION(std::vector<float>, mcMomPt)                \
-   ACTION(std::vector<float>, mcMomEta)               \
-   ACTION(std::vector<float>, mcMomPhi)               \
-   ACTION(std::vector<float>, mcMomMass)              \
-   ACTION(std::vector<int>, mcGMomPID)                \
-   ACTION(std::vector<int>, mcIndex)                  \
-   ACTION(std::vector<float>, mcCalIsoDR03)           \
-   ACTION(std::vector<float>, mcCalIsoDR04)           \
-   ACTION(std::vector<float>, mcTrkIsoDR03)           \
-   ACTION(std::vector<float>, mcTrkIsoDR04)           \
+#define B_VAR_M(ACTION, ...)                                            \
+   ACTION(Int_t, nMC, ## __VA_ARGS__)                                   \
 
-#define VECBRANCHESDATA(ACTION)                       \
-   ACTION(std::vector<int>, eleCharge)                \
-   ACTION(std::vector<int>, eleChargeConsistent)      \
-   ACTION(std::vector<int>, eleSCPixCharge)           \
-   ACTION(std::vector<int>, eleCtfCharge)             \
-   ACTION(std::vector<float>, eleEn)                  \
-   ACTION(std::vector<float>, eleD0)                  \
-   ACTION(std::vector<float>, eleDz)                  \
-   ACTION(std::vector<float>, eleD0Err)               \
-   ACTION(std::vector<float>, eleDzErr)               \
-   ACTION(std::vector<float>, eleTrkPt)               \
-   ACTION(std::vector<float>, eleTrkEta)              \
-   ACTION(std::vector<float>, eleTrkPhi)              \
-   ACTION(std::vector<int>, eleTrkCharge)             \
-   ACTION(std::vector<float>, eleTrkChi2)             \
-   ACTION(std::vector<float>, eleTrkNdof)             \
-   ACTION(std::vector<float>, eleTrkNormalizedChi2)   \
-   ACTION(std::vector<int>, eleTrkValidHits)          \
-   ACTION(std::vector<int>, eleTrkLayers)             \
-   ACTION(std::vector<float>, elePt)                  \
-   ACTION(std::vector<float>, eleEta)                 \
-   ACTION(std::vector<float>, elePhi)                 \
-   ACTION(std::vector<float>, eleSCEn)                \
-   ACTION(std::vector<float>, eleESEn)                \
-   ACTION(std::vector<float>, eleSCEta)               \
-   ACTION(std::vector<float>, eleSCPhi)               \
-   ACTION(std::vector<float>, eleSCRawEn)             \
-   ACTION(std::vector<float>, eleSCEtaWidth)          \
-   ACTION(std::vector<float>, eleSCPhiWidth)          \
-   ACTION(std::vector<float>, eleHoverE)              \
-   ACTION(std::vector<float>, eleHoverEBc)            \
-   ACTION(std::vector<float>, eleEoverP)              \
-   ACTION(std::vector<float>, eleEoverPInv)           \
-   ACTION(std::vector<float>, eleBrem)                \
-   ACTION(std::vector<float>, eledEtaAtVtx)           \
-   ACTION(std::vector<float>, eledPhiAtVtx)           \
-   ACTION(std::vector<float>, eleSigmaIEtaIEta)       \
-   ACTION(std::vector<float>, eleSigmaIEtaIEta_2012)  \
-   ACTION(std::vector<float>, eleSigmaIPhiIPhi)       \
-   ACTION(std::vector<int>, eleMissHits)              \
-   ACTION(std::vector<float>, eleESEffSigmaRR)        \
-   ACTION(std::vector<float>, elePFChIso)             \
-   ACTION(std::vector<float>, elePFPhoIso)            \
-   ACTION(std::vector<float>, elePFNeuIso)            \
-   ACTION(std::vector<float>, elePFPUIso)             \
-   ACTION(std::vector<float>, elePFChIso03)           \
-   ACTION(std::vector<float>, elePFPhoIso03)          \
-   ACTION(std::vector<float>, elePFNeuIso03)          \
-   ACTION(std::vector<float>, elePFChIso04)           \
-   ACTION(std::vector<float>, elePFPhoIso04)          \
-   ACTION(std::vector<float>, elePFNeuIso04)          \
-   ACTION(std::vector<float>, eleR9)                  \
-   ACTION(std::vector<float>, eleE3x3)                \
-   ACTION(std::vector<float>, eleE5x5)                \
-   ACTION(std::vector<float>, eleR9Full5x5)           \
-   ACTION(std::vector<float>, eleE3x3Full5x5)         \
-   ACTION(std::vector<float>, eleE5x5Full5x5)         \
-   ACTION(std::vector<int>, NClusters)                \
-   ACTION(std::vector<int>, NEcalClusters)            \
-   ACTION(std::vector<float>, eleSeedEn)              \
-   ACTION(std::vector<float>, eleSeedEta)             \
-   ACTION(std::vector<float>, eleSeedPhi)             \
-   ACTION(std::vector<float>, eleSeedCryEta)          \
-   ACTION(std::vector<float>, eleSeedCryPhi)          \
-   ACTION(std::vector<float>, eleSeedCryIeta)         \
-   ACTION(std::vector<float>, eleSeedCryIphi)         \
-   ACTION(std::vector<float>, eleBC1E)                \
-   ACTION(std::vector<float>, eleBC1Eta)              \
-   ACTION(std::vector<float>, eleBC2E)                \
-   ACTION(std::vector<float>, eleBC2Eta)              \
-   ACTION(std::vector<int>, eleIDVeto)                \
-   ACTION(std::vector<int>, eleIDLoose)               \
-   ACTION(std::vector<int>, eleIDMedium)              \
-   ACTION(std::vector<int>, eleIDTight)               \
-   ACTION(std::vector<int>, elepassConversionVeto)    \
-   ACTION(std::vector<float>, eleEffAreaTimesRho)     \
+#define B_VAR_N(ACTION, ...)                                            \
+   ACTION(int, hiBin, ## __VA_ARGS__)                                   \
+   ACTION(float, hiHF, ## __VA_ARGS__)                                  \
+   ACTION(float, ncoll, ## __VA_ARGS__)                                 \
 
-#define NEWVECBRANCHES(ACTION)                        \
-   ACTION(std::vector<int>, eleGenMatchIndex)         \
-   ACTION(std::vector<int>, mcRecoMatchIndex)         \
-   ACTION(std::vector<int>, hlt)                      \
-   ACTION(std::vector<double>, pt_e20)                \
-   ACTION(std::vector<double>, eta_e20)               \
-   ACTION(std::vector<double>, phi_e20)               \
-   ACTION(std::vector<int>, n_e20)                    \
-   ACTION(std::vector<double>, pt_e10e10m50)          \
-   ACTION(std::vector<double>, eta_e10e10m50)         \
-   ACTION(std::vector<double>, phi_e10e10m50)         \
-   ACTION(std::vector<int>, n_e10e10m50)              \
+#define B_VEC_D(ACTION, ...)                                            \
+   ACTION(std::vector<int>, eleCharge, ## __VA_ARGS__)                  \
+   ACTION(std::vector<int>, eleChargeConsistent, ## __VA_ARGS__)        \
+   ACTION(std::vector<int>, eleSCPixCharge, ## __VA_ARGS__)             \
+   ACTION(std::vector<int>, eleCtfCharge, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleEn, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, eleD0, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, eleDz, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, eleD0Err, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, eleDzErr, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, eleTrkPt, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, eleTrkEta, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleTrkPhi, ## __VA_ARGS__)                \
+   ACTION(std::vector<int>, eleTrkCharge, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleTrkChi2, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleTrkNdof, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleTrkNormalizedChi2, ## __VA_ARGS__)     \
+   ACTION(std::vector<int>, eleTrkValidHits, ## __VA_ARGS__)            \
+   ACTION(std::vector<int>, eleTrkLayers, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, elePt, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, eleEta, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, elePhi, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, eleSCEn, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eleESEn, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eleSCEta, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, eleSCPhi, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, eleSCRawEn, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleSCEtaWidth, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleSCPhiWidth, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleHoverE, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleHoverEBc, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleEoverP, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleEoverPInv, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleBrem, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eledEtaAtVtx, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eledPhiAtVtx, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleSigmaIEtaIEta, ## __VA_ARGS__)         \
+   ACTION(std::vector<float>, eleSigmaIEtaIEta_2012, ## __VA_ARGS__)    \
+   ACTION(std::vector<float>, eleSigmaIPhiIPhi, ## __VA_ARGS__)         \
+   ACTION(std::vector<int>, eleMissHits, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleESEffSigmaRR, ## __VA_ARGS__)          \
+   ACTION(std::vector<float>, elePFChIso, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, elePFPhoIso, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, elePFNeuIso, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, elePFPUIso, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, elePFChIso03, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, elePFPhoIso03, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, elePFNeuIso03, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, elePFChIso04, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, elePFPhoIso04, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, elePFNeuIso04, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleR9, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, eleE3x3, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eleE5x5, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eleR9Full5x5, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleE3x3Full5x5, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleE5x5Full5x5, ## __VA_ARGS__)           \
+   ACTION(std::vector<int>, NClusters, ## __VA_ARGS__)                  \
+   ACTION(std::vector<int>, NEcalClusters, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSeedEn, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleSeedEta, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleSeedPhi, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleSeedCryEta, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleSeedCryPhi, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleSeedCryIeta, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleSeedCryIphi, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleBC1E, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eleBC1Eta, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleBC2E, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, eleBC2Eta, ## __VA_ARGS__)                \
+   ACTION(std::vector<int>, eleIDVeto, ## __VA_ARGS__)                  \
+   ACTION(std::vector<int>, eleIDLoose, ## __VA_ARGS__)                 \
+   ACTION(std::vector<int>, eleIDMedium, ## __VA_ARGS__)                \
+   ACTION(std::vector<int>, eleIDTight, ## __VA_ARGS__)                 \
+   ACTION(std::vector<int>, elepassConversionVeto, ## __VA_ARGS__)      \
+   ACTION(std::vector<float>, eleEffAreaTimesRho, ## __VA_ARGS__)       \
 
-#define L1VARBRANCHES(ACTION)                         \
-   ACTION(short, nEGs)                                \
+#define B_VEC_L(ACTION, ...)                                            \
+   ACTION(std::vector<float>, egEt, ## __VA_ARGS__)                     \
+   ACTION(std::vector<float>, egEta, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, egPhi, ## __VA_ARGS__)                    \
+   ACTION(std::vector<short>, egIEt, ## __VA_ARGS__)                    \
+   ACTION(std::vector<short>, egIEta, ## __VA_ARGS__)                   \
+   ACTION(std::vector<short>, egIPhi, ## __VA_ARGS__)                   \
+   ACTION(std::vector<short>, egIso, ## __VA_ARGS__)                    \
+   ACTION(std::vector<short>, egBx, ## __VA_ARGS__)                     \
+   ACTION(std::vector<short>, egTowerIPhi, ## __VA_ARGS__)              \
+   ACTION(std::vector<short>, egTowerIEta, ## __VA_ARGS__)              \
+   ACTION(std::vector<short>, egRawEt, ## __VA_ARGS__)                  \
+   ACTION(std::vector<short>, egIsoEt, ## __VA_ARGS__)                  \
+   ACTION(std::vector<short>, egFootprintEt, ## __VA_ARGS__)            \
+   ACTION(std::vector<short>, egNTT, ## __VA_ARGS__)                    \
+   ACTION(std::vector<short>, egShape, ## __VA_ARGS__)                  \
+   ACTION(std::vector<short>, egTowerHoE, ## __VA_ARGS__)               \
+   ACTION(std::vector<short>, egHwQual, ## __VA_ARGS__)                 \
 
-#define L1VECBRANCHES(ACTION)                         \
-   ACTION(std::vector<float>, egEt)                   \
-   ACTION(std::vector<float>, egEta)                  \
-   ACTION(std::vector<float>, egPhi)                  \
-   ACTION(std::vector<short>, egIEt)                  \
-   ACTION(std::vector<short>, egIEta)                 \
-   ACTION(std::vector<short>, egIPhi)                 \
-   ACTION(std::vector<short>, egIso)                  \
-   ACTION(std::vector<short>, egBx)                   \
-   ACTION(std::vector<short>, egTowerIPhi)            \
-   ACTION(std::vector<short>, egTowerIEta)            \
-   ACTION(std::vector<short>, egRawEt)                \
-   ACTION(std::vector<short>, egIsoEt)                \
-   ACTION(std::vector<short>, egFootprintEt)          \
-   ACTION(std::vector<short>, egNTT)                  \
-   ACTION(std::vector<short>, egShape)                \
-   ACTION(std::vector<short>, egTowerHoE)             \
-   ACTION(std::vector<short>, egHwQual)               \
+#define B_VEC_M(ACTION, ...)                                            \
+   ACTION(std::vector<int>, mcPID, ## __VA_ARGS__)                      \
+   ACTION(std::vector<int>, mcStatus, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, mcVtx_x, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, mcVtx_y, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, mcVtx_z, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, mcPt, ## __VA_ARGS__)                     \
+   ACTION(std::vector<float>, mcEta, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, mcPhi, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, mcE, ## __VA_ARGS__)                      \
+   ACTION(std::vector<float>, mcEt, ## __VA_ARGS__)                     \
+   ACTION(std::vector<float>, mcMass, ## __VA_ARGS__)                   \
+   ACTION(std::vector<int>, mcParentage, ## __VA_ARGS__)                \
+   ACTION(std::vector<int>, mcMomPID, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, mcMomPt, ## __VA_ARGS__)                  \
+   ACTION(std::vector<float>, mcMomEta, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, mcMomPhi, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, mcMomMass, ## __VA_ARGS__)                \
+   ACTION(std::vector<int>, mcGMomPID, ## __VA_ARGS__)                  \
+   ACTION(std::vector<int>, mcIndex, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>, mcCalIsoDR03, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, mcCalIsoDR04, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, mcTrkIsoDR03, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, mcTrkIsoDR04, ## __VA_ARGS__)             \
 
-#define INVALID(type, var) var = -1;
-#define DECLARE(type, var) type var;
-#define CREATE(type, var) t->Branch(#var, &var);
-#define CLEAR(type, var) var.clear();
-#define VARCOPY(type, var) var = evtt->var;
-#define VECCOPY(type, var)                                                    \
-   std::copy(evtt->var->begin(), evtt->var->end(), std::back_inserter(var));
-#define L1VARCOPY(type, var) var = l1ot->var;
-#define L1VECCOPY(type, var)                                                  \
-   std::copy(l1ot->var->begin(), l1ot->var->end(), std::back_inserter(var));
+#define B_VEC_N(ACTION, ...)                                            \
+   ACTION(std::vector<int>, eleGenMatchIndex, ## __VA_ARGS__)           \
+   ACTION(std::vector<int>, mcRecoMatchIndex, ## __VA_ARGS__)           \
+   ACTION(std::vector<int>, hlt, ## __VA_ARGS__)                        \
+   ACTION(std::vector<double>, pt_e20, ## __VA_ARGS__)                  \
+   ACTION(std::vector<double>, eta_e20, ## __VA_ARGS__)                 \
+   ACTION(std::vector<double>, phi_e20, ## __VA_ARGS__)                 \
+   ACTION(std::vector<int>, n_e20, ## __VA_ARGS__)                      \
 
 class electrontree {
    public:
-      electrontree() { VARBRANCHES(INVALID) };
-      electrontree(TTree* t, bool isdata)
-         : electrontree() { this->isdata = isdata; branch(t); };
+      electrontree() {
+         B_VAR_D(INVALID)
+         B_VAR_L(INVALID)
+         B_VAR_M(INVALID)
+         B_VAR_N(INVALID)
+      };
+
+      electrontree(TTree* t, bool do_mc_branches, bool do_l1_branches)
+         : electrontree() {
+            this->do_mc_branches = do_mc_branches;
+            this->do_l1_branches = do_l1_branches;
+            branch(t);
+         };
+
       ~electrontree() {};
 
       void branch(TTree* t) {
-         VARBRANCHES(CREATE)
-         if (!isdata) {
-            VECBRANCHESMC(CREATE) }
-         else {
-            L1VARBRANCHES(CREATE)
-            L1VECBRANCHES(CREATE) }
-         VECBRANCHESDATA(CREATE)
-         NEWVARBRANCHES(CREATE)
-         NEWVECBRANCHES(CREATE)
+         B_VAR_D(CREATE, t)
+         B_VEC_D(CREATE, t)
+         if (do_l1_branches) {
+            B_VAR_L(CREATE, t)
+            B_VEC_L(CREATE, t) }
+         if (do_mc_branches) {
+            B_VAR_M(CREATE, t)
+            B_VEC_M(CREATE, t) }
+         B_VAR_N(CREATE, t)
+         B_VEC_N(CREATE, t)
       };
 
       void clear() {
-         VECBRANCHESMC(CLEAR)
-         VECBRANCHESDATA(CLEAR)
-         NEWVECBRANCHES(CLEAR)
-         L1VECBRANCHES(CLEAR)
+         B_VEC_D(CLEAR)
+         B_VEC_L(CLEAR)
+         B_VEC_M(CLEAR)
+         B_VEC_N(CLEAR)
       };
 
       void copy(eventtree* evtt) {
-         VARBRANCHES(VARCOPY)
-         if (!isdata) {
-            VECBRANCHESMC(VECCOPY) }
-         VECBRANCHESDATA(VECCOPY)
+         B_VAR_D(VARCOPY, evtt)
+         B_VEC_D(VECCOPY, evtt)
+         if (do_mc_branches) {
+            B_VAR_M(VARCOPY, evtt)
+            B_VEC_M(VECCOPY, evtt) }
       };
 
-      void copy(l1tree* l1ot, bool hasl1) {
-         if (hasl1) {
-            L1VARBRANCHES(L1VARCOPY)
-            L1VECBRANCHES(L1VECCOPY)
+      void copy(l1tree* l1t) {
+         if (do_l1_branches) {
+            B_VAR_L(VARCOPY, l1t)
+            B_VEC_L(VECCOPY, l1t)
          }
       };
 
       BRANCHES(DECLARE)
 
    private:
-      bool isdata;
+      bool do_mc_branches;
+      bool do_l1_branches;
 };
 
 #endif  /* ELECTRONTREE_H */

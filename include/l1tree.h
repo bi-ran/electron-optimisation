@@ -5,47 +5,49 @@
 
 #include <vector>
 
-#define L1BRANCHES(ACTION)                            \
-   L1DATABRANCHES(ACTION)                             \
+#include "common.h"
 
-#define L1DATABRANCHES(ACTION)                        \
-   ACTION(short, nEGs)                                \
-   ACTION(std::vector<float>*, egEt)                  \
-   ACTION(std::vector<float>*, egEta)                 \
-   ACTION(std::vector<float>*, egPhi)                 \
-   ACTION(std::vector<short>*, egIEt)                 \
-   ACTION(std::vector<short>*, egIEta)                \
-   ACTION(std::vector<short>*, egIPhi)                \
-   ACTION(std::vector<short>*, egIso)                 \
-   ACTION(std::vector<short>*, egBx)                  \
-   ACTION(std::vector<short>*, egTowerIPhi)           \
-   ACTION(std::vector<short>*, egTowerIEta)           \
-   ACTION(std::vector<short>*, egRawEt)               \
-   ACTION(std::vector<short>*, egIsoEt)               \
-   ACTION(std::vector<short>*, egFootprintEt)         \
-   ACTION(std::vector<short>*, egNTT)                 \
-   ACTION(std::vector<short>*, egShape)               \
-   ACTION(std::vector<short>*, egTowerHoE)            \
-   ACTION(std::vector<short>*, egHwQual)              \
+#define BRANCHES_L1T(ACTION, ...)                                       \
+   B_ALL_L(ACTION, ## __VA_ARGS__)                                      \
 
-#define L1ZERO(type, var) var = 0;
-#define L1DECLARE(type, var) type var;
-#define L1READ(type, var)                             \
-   t->SetBranchStatus(#var, 1);                       \
-   t->SetBranchAddress(#var, &var);                   \
+#define B_ALL_L(ACTION, ...)                                            \
+   ACTION(short, nEGs, ## __VA_ARGS__)                                  \
+   ACTION(std::vector<float>*, egEt, ## __VA_ARGS__)                    \
+   ACTION(std::vector<float>*, egEta, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>*, egPhi, ## __VA_ARGS__)                   \
+   ACTION(std::vector<short>*, egIEt, ## __VA_ARGS__)                   \
+   ACTION(std::vector<short>*, egIEta, ## __VA_ARGS__)                  \
+   ACTION(std::vector<short>*, egIPhi, ## __VA_ARGS__)                  \
+   ACTION(std::vector<short>*, egIso, ## __VA_ARGS__)                   \
+   ACTION(std::vector<short>*, egBx, ## __VA_ARGS__)                    \
+   ACTION(std::vector<short>*, egTowerIPhi, ## __VA_ARGS__)             \
+   ACTION(std::vector<short>*, egTowerIEta, ## __VA_ARGS__)             \
+   ACTION(std::vector<short>*, egRawEt, ## __VA_ARGS__)                 \
+   ACTION(std::vector<short>*, egIsoEt, ## __VA_ARGS__)                 \
+   ACTION(std::vector<short>*, egFootprintEt, ## __VA_ARGS__)           \
+   ACTION(std::vector<short>*, egNTT, ## __VA_ARGS__)                   \
+   ACTION(std::vector<short>*, egShape, ## __VA_ARGS__)                 \
+   ACTION(std::vector<short>*, egTowerHoE, ## __VA_ARGS__)              \
+   ACTION(std::vector<short>*, egHwQual, ## __VA_ARGS__)                \
 
 class l1tree {
    public:
-      l1tree() { L1BRANCHES(L1ZERO) };
-      l1tree(TTree* t, bool hasl1) : l1tree() { read(t, hasl1); }
+      l1tree() { do_l1_branches = 0; BRANCHES_L1T(ZERO) };
+      l1tree(TTree* t, bool do_l1_branches)
+         : l1tree() {
+            this->do_l1_branches = do_l1_branches;
+            read(t);
+         }
       ~l1tree() { };
 
-      void read(TTree* t, bool hasl1) {
-         if (hasl1) {
-            L1DATABRANCHES(L1READ) }
+      void read(TTree* t) {
+         if (do_l1_branches) {
+            B_ALL_L(READ, t) }
       };
 
-      L1BRANCHES(L1DECLARE)
+      bool do_l1_branches;
+
+      BRANCHES_L1T(DECLARE)
 };
 
 #endif  /* L1TREE_H */

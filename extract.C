@@ -4,8 +4,8 @@
 #include "TLorentzVector.h"
 
 #include "include/constants.h"
-#include "include/eventtree.h"
 #include "include/electrontree.h"
+#include "include/eventtree.h"
 #include "include/l1tree.h"
 
 #include "git/config/configurer.h"
@@ -23,8 +23,8 @@ int extract(const char* config, const char* output) {
 
    auto files = conf->get<std::vector<std::string>>("files");
    auto paths = conf->get<std::vector<std::string>>("paths");
-   auto hasl1 = conf->get<bool>("hasl1");
-   auto isdata = conf->get<bool>("isdata");
+   auto do_l1_branches = conf->get<bool>("do_l1_branches");
+   auto do_mc_branches = conf->get<bool>("do_mc_branches");
 
    auto maxentries = conf->get<uint64_t>("maxentries");
 
@@ -32,7 +32,6 @@ int extract(const char* config, const char* output) {
    TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
    TChain* chlt = new TChain("hltanalysis/HltTree");
    TChain* ce20 = new TChain("hltobject/HLT_HIEle20Gsf_v");
-   TChain* ce10e10m50 = new TChain("hltobject/HLT_HIDoubleEle10GsfMass50_v");
    TChain* cl1 = new TChain("l1object/L1UpgradeFlatTree");
 
    for (const auto& file : files) {
@@ -40,7 +39,6 @@ int extract(const char* config, const char* output) {
       cevt->Add(file.data());
       chlt->Add(file.data());
       ce20->Add(file.data());
-      ce10e10m50->Add(file.data());
       cl1->Add(file.data());
    }
 
@@ -48,7 +46,6 @@ int extract(const char* config, const char* output) {
    cevt->SetBranchStatus("*", 0);
    chlt->SetBranchStatus("*", 0);
    ce20->SetBranchStatus("*", 0);
-   ce10e10m50->SetBranchStatus("*", 0);
    cl1->SetBranchStatus("*", 0);
 
    int hiBin;
@@ -73,21 +70,13 @@ int extract(const char* config, const char* output) {
    ce20->SetBranchAddress("eta", &e20_eta);
    ce20->SetBranchAddress("phi", &e20_phi);
 
-   std::vector<double>* e10e10m50_pt = 0;
-   std::vector<double>* e10e10m50_eta = 0;
-   std::vector<double>* e10e10m50_phi = 0;
-   ce10e10m50->SetBranchStatus("pt", 1);
-   ce10e10m50->SetBranchAddress("pt", &e10e10m50_pt);
-   ce10e10m50->SetBranchAddress("eta", &e10e10m50_eta);
-   ce10e10m50->SetBranchAddress("phi", &e10e10m50_phi);
-
-   eventtree* evtt = new eventtree(ceg, isdata);
-   l1tree* l1ot = new l1tree(cl1, hasl1);
+   eventtree* evtt = new eventtree(ceg, do_mc_branches);
+   l1tree* l1t = new l1tree(cl1, do_l1_branches);
 
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
 
-   electrontree* elet = new electrontree(tout, isdata);
+   electrontree* elet = new electrontree(tout, do_l1_branches, do_mc_branches);
 
    const float mindr2 = 0.15 * 0.15;
 
@@ -101,14 +90,13 @@ int extract(const char* config, const char* output) {
       cevt->GetEntry(i);
       chlt->GetEntry(i);
       ce20->GetEntry(i);
-      ce10e10m50->GetEntry(i);
       cl1->GetEntry(i);
 
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
       for (auto const& b : hlt) { elet->hlt.push_back(b); }
 
-      if (!elet->isData) {
+      if (do_mc_branches) {
          elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
          for (int j=0; j<evtt->nEle; ++j) {
             int match = -1;
@@ -135,11 +123,11 @@ int extract(const char* config, const char* output) {
          }
       }
 
-      elet->copy(l1ot, hasl1);
+      elet->copy(l1t);
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;
-      elet->ncoll = elet->isData ? 1 : ncoll(hiBin);
+      elet->ncoll = do_mc_branches ? ncoll(hiBin) : 1;
 
       for (uint32_t j = 0; j < e20_pt->size(); ++j) {
          auto const& o = (*e20_pt)[i];
@@ -150,18 +138,6 @@ int extract(const char* config, const char* output) {
             elet->pt_e20.push_back((*e20_pt)[j]);
             elet->eta_e20.push_back((*e20_eta)[j]);
             elet->phi_e20.push_back((*e20_phi)[j]);
-         }
-      }
-
-      for (uint32_t j = 0; j < e10e10m50_pt->size(); ++j) {
-         auto const& o = (*e10e10m50_pt)[i];
-         if (std::find(elet->pt_e10e10m50.begin(), elet->pt_e10e10m50.end(), o)
-               == elet->pt_e10e10m50.end()) {
-            elet->n_e10e10m50.push_back(std::count(
-               e10e10m50_pt->begin(), e10e10m50_pt->end(), o));
-            elet->pt_e10e10m50.push_back((*e10e10m50_pt)[j]);
-            elet->eta_e10e10m50.push_back((*e10e10m50_eta)[j]);
-            elet->phi_e10e10m50.push_back((*e10e10m50_phi)[j]);
          }
       }
 
