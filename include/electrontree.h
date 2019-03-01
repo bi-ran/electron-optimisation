@@ -52,6 +52,7 @@
    ACTION(std::vector<float>, eleTrkEta, ## __VA_ARGS__)                \
    ACTION(std::vector<float>, eleTrkPhi, ## __VA_ARGS__)                \
    ACTION(std::vector<int>, eleTrkCharge, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleTrkPtErr, ## __VA_ARGS__)              \
    ACTION(std::vector<float>, eleTrkChi2, ## __VA_ARGS__)               \
    ACTION(std::vector<float>, eleTrkNdof, ## __VA_ARGS__)               \
    ACTION(std::vector<float>, eleTrkNormalizedChi2, ## __VA_ARGS__)     \
@@ -71,6 +72,11 @@
    ACTION(std::vector<float>, eleHoverEBc, ## __VA_ARGS__)              \
    ACTION(std::vector<float>, eleEoverP, ## __VA_ARGS__)                \
    ACTION(std::vector<float>, eleEoverPInv, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleEcalE, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, elePAtVtx, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, elePAtSC, ## __VA_ARGS__)                 \
+   ACTION(std::vector<float>, elePAtCluster, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, elePAtSeed, ## __VA_ARGS__)               \
    ACTION(std::vector<float>, eleBrem, ## __VA_ARGS__)                  \
    ACTION(std::vector<float>, eledEtaAtVtx, ## __VA_ARGS__)             \
    ACTION(std::vector<float>, eledPhiAtVtx, ## __VA_ARGS__)             \
@@ -112,7 +118,6 @@
    ACTION(std::vector<int>, eleIDLoose, ## __VA_ARGS__)                 \
    ACTION(std::vector<int>, eleIDMedium, ## __VA_ARGS__)                \
    ACTION(std::vector<int>, eleIDTight, ## __VA_ARGS__)                 \
-   ACTION(std::vector<int>, elepassConversionVeto, ## __VA_ARGS__)      \
    ACTION(std::vector<float>, eleEffAreaTimesRho, ## __VA_ARGS__)       \
 
 #define B_VEC_L(ACTION, ...)                                            \
