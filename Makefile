@@ -1,31 +1,35 @@
-CXX = clang++
-CXXFLAGS += -O2 -Wall -Werror -Wextra
-ROOTFLAGS := `root-config --cflags --libs` -lEG
+CXX = g++
+CXXFLAGS  += -O2 -Wall -Werror -Wextra
+RCXXFLAGS := `root-config --cflags --libs`
+LDFLAGS   += -lconf -L./git/config/lib
+RLDFLAGS  := -lEG
 
 BUILDDIR = ./build
 
-CSRCS   = $(wildcard *.C)
-CEXES   = $(patsubst %.C,%,$(CSRCS))
-CDEPS   = $(patsubst %.C,$(BUILDDIR)/%.d,$(CSRCS))
+RPPSRCS = $(wildcard *.C)
+RPPEXES = $(patsubst %.C,%,$(RPPSRCS))
+RPPDEPS = $(patsubst %.C,$(BUILDDIR)/%.d,$(RPPSRCS))
 
 CPPSRCS = $(wildcard *.cpp)
 CPPEXES = $(patsubst %.cpp,%,$(CPPSRCS))
 CPPDEPS = $(patsubst %.cpp,$(BUILDDIR)/%.d,$(CPPSRCS))
 
-EXES = $(CEXES) $(CPPEXES)
-DEPS = $(CDEPS) $(CPPDEPS)
+EXES = $(RPPEXES) $(CPPEXES)
+DEPS = $(RPPDEPS) $(CPPDEPS)
 
 .PHONY: all clean
 
-all: $(CEXES) $(CPPEXES)
+all: $(RPPEXES) $(CPPEXES)
 
-$(CEXES) : % : %.C
+$(RPPEXES) : % : %.C
 	@mkdir -p $(BUILDDIR)/$(@D)
-	$(CXX) $(CXXFLAGS) $(ROOTFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@
+	$(CXX) $(CXXFLAGS) $(RCXXFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@ \
+		$(LDFLAGS) $(RLDFLAGS)
 
 $(CPPEXES) : % : %.cpp
 	@mkdir -p $(BUILDDIR)/$(@D)
-	$(CXX) $(CXXFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MF $(BUILDDIR)/$(@D)/$(*F).d $< -o $@ \
+		$(LDFLAGS)
 
 clean:
 	@$(RM) $(EXES) $(DEPS)
