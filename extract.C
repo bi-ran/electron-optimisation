@@ -8,7 +8,7 @@
 #include "include/eventtree.h"
 #include "include/l1tree.h"
 
-#include "git/config/configurer.h"
+#include "git/config/include/configurer.h"
 
 #define PI 3.141593f
 

@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "git/config/configurer.h"
-
 #include "include/cosmetics.h"
+
+#include "git/config/include/configurer.h"
 
 #define ASSERT(condition, message)     \
    if (!(condition)) {                 \

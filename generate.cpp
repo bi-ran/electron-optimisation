@@ -1,7 +1,7 @@
 #include <fstream>
 #include <string>
 
-#include "git/config/configurer.h"
+#include "git/config/include/configurer.h"
 
 int generate(const char* config, const char* output) {
    configurer* conf = new configurer(config);
