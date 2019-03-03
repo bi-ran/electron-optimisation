@@ -23,30 +23,41 @@ int extract(const char* config, const char* output) {
 
    auto files = conf->get<std::vector<std::string>>("files");
    auto paths = conf->get<std::vector<std::string>>("paths");
-   auto do_l1_branches = conf->get<bool>("do_l1_branches");
    auto do_mc_branches = conf->get<bool>("do_mc_branches");
+   auto do_l1_branches = conf->get<bool>("do_l1_branches");
+   auto do_hlt_branches = conf->get<bool>("do_hlt_branches");
 
    auto maxentries = conf->get<uint64_t>("maxentries");
 
    TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
    TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
-   TChain* chlt = new TChain("hltanalysis/HltTree");
-   TChain* ce20 = new TChain("hltobject/HLT_HIEle20Gsf_v");
-   TChain* cl1 = new TChain("l1object/L1UpgradeFlatTree");
+   TChain* cl1 = (do_l1_branches) ? new TChain("l1object/L1UpgradeFlatTree") : 0;
+   TChain* chlt = (do_hlt_branches) ? new TChain("hltanalysis/HltTree") : 0;
+   TChain* ce20 = (do_hlt_branches) ? new TChain("hltobject/HLT_HIEle20Gsf_v") : 0;
 
    for (const auto& file : files) {
       ceg->Add(file.data());
       cevt->Add(file.data());
-      chlt->Add(file.data());
-      ce20->Add(file.data());
-      cl1->Add(file.data());
+
+      if (do_l1_branches)
+         cl1->Add(file.data());
+
+      if (do_hlt_branches) {
+         chlt->Add(file.data());
+         ce20->Add(file.data());
+      }
    }
 
    ceg->SetBranchStatus("*", 0);
    cevt->SetBranchStatus("*", 0);
-   chlt->SetBranchStatus("*", 0);
-   ce20->SetBranchStatus("*", 0);
-   cl1->SetBranchStatus("*", 0);
+
+   if (do_l1_branches)
+      cl1->SetBranchStatus("*", 0);
+
+   if (do_hlt_branches) {
+      chlt->SetBranchStatus("*", 0);
+      ce20->SetBranchStatus("*", 0);
+   }
 
    int hiBin;
    cevt->SetBranchStatus("hiBin", 1);
@@ -57,21 +68,26 @@ int extract(const char* config, const char* output) {
    cevt->SetBranchAddress("hiHF", &hiHF);
 
    std::vector<int> hlt(paths.size());
-   for (std::size_t i=0; i<paths.size(); ++i) {
-      chlt->SetBranchStatus(paths[i].data(), 1);
-      chlt->SetBranchAddress(paths[i].data(), &hlt[i]);
+   if (do_hlt_branches) {
+      for (std::size_t i=0; i<paths.size(); ++i) {
+         chlt->SetBranchStatus(paths[i].data(), 1);
+         chlt->SetBranchAddress(paths[i].data(), &hlt[i]);
+      }
    }
 
    std::vector<double>* e20_pt = 0;
    std::vector<double>* e20_eta = 0;
    std::vector<double>* e20_phi = 0;
-   ce20->SetBranchStatus("pt", 1);
-   ce20->SetBranchAddress("pt", &e20_pt);
-   ce20->SetBranchAddress("eta", &e20_eta);
-   ce20->SetBranchAddress("phi", &e20_phi);
+
+   if (do_hlt_branches) {
+      ce20->SetBranchStatus("pt", 1);
+      ce20->SetBranchAddress("pt", &e20_pt);
+      ce20->SetBranchAddress("eta", &e20_eta);
+      ce20->SetBranchAddress("phi", &e20_phi);
+   }
 
    eventtree* evtt = new eventtree(ceg, do_mc_branches);
-   l1tree* l1t = new l1tree(cl1, do_l1_branches);
+   l1tree* l1t = (do_l1_branches) ? new l1tree(cl1, do_l1_branches) : 0;
 
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
@@ -88,9 +104,14 @@ int extract(const char* config, const char* output) {
 
       ceg->GetEntry(i);
       cevt->GetEntry(i);
-      chlt->GetEntry(i);
-      ce20->GetEntry(i);
-      cl1->GetEntry(i);
+
+      if (do_hlt_branches) {
+         chlt->GetEntry(i);
+         ce20->GetEntry(i);
+      }
+
+      if (do_l1_branches)
+         cl1->GetEntry(i);
 
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
@@ -123,21 +144,24 @@ int extract(const char* config, const char* output) {
          }
       }
 
-      elet->copy(l1t);
+      if (do_l1_branches)
+         elet->copy(l1t);
       elet->copy(evtt);
       elet->hiBin = hiBin;
       elet->hiHF = hiHF;
       elet->ncoll = do_mc_branches ? ncoll(hiBin) : 1;
 
-      for (uint32_t j = 0; j < e20_pt->size(); ++j) {
-         auto const& o = (*e20_pt)[i];
-         if (std::find(elet->pt_e20.begin(), elet->pt_e20.end(), o)
-               == elet->pt_e20.end()) {
-            elet->n_e20.push_back(std::count(
-               e20_pt->begin(), e20_pt->end(), o));
-            elet->pt_e20.push_back((*e20_pt)[j]);
-            elet->eta_e20.push_back((*e20_eta)[j]);
-            elet->phi_e20.push_back((*e20_phi)[j]);
+      if (do_hlt_branches) {
+         for (uint32_t j = 0; j < e20_pt->size(); ++j) {
+            auto const& o = (*e20_pt)[i];
+            if (std::find(elet->pt_e20.begin(), elet->pt_e20.end(), o)
+                  == elet->pt_e20.end()) {
+               elet->n_e20.push_back(std::count(
+                  e20_pt->begin(), e20_pt->end(), o));
+               elet->pt_e20.push_back((*e20_pt)[j]);
+               elet->eta_e20.push_back((*e20_eta)[j]);
+               elet->phi_e20.push_back((*e20_phi)[j]);
+            }
          }
       }
 
