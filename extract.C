@@ -92,7 +92,7 @@ int extract(const char* config, const char* output) {
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
 
-   electrontree* elet = new electrontree(tout, do_l1_branches, do_mc_branches);
+   electrontree* elet = new electrontree(tout, do_mc_branches, do_l1_branches);
 
    const float mindr2 = 0.15 * 0.15;
 
@@ -115,7 +115,9 @@ int extract(const char* config, const char* output) {
 
       if (i % 10000 == 0) { printf("entry: %lu\n", i); }
 
-      for (auto const& b : hlt) { elet->hlt.push_back(b); }
+      if (do_hlt_branches)
+         for (auto const& b : hlt)
+            elet->hlt.push_back(b);
 
       if (do_mc_branches) {
          elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
