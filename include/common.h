@@ -11,7 +11,8 @@
 #define CREATE(type, var, tree) tree->Branch(#var, &var);
 #define VARCOPY(type, var, tree) var = tree->var;
 #define VECCOPY(type, var, tree)                                        \
-   std::copy(tree->var->begin(), tree->var->end(),                      \
-             std::back_inserter(var));
+   if (tree->var != nullptr)                                            \
+      std::copy(tree->var->begin(), tree->var->end(),                   \
+                std::back_inserter(var));
 
 #endif /* COMMON_H */
