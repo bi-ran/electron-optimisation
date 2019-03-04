@@ -54,9 +54,9 @@ void hstyle(T* h, int style, int colour) {
 void htitle(TH1* h, const char* title) {
    h->SetTitle(title);
    h->GetXaxis()->CenterTitle();
-   h->GetXaxis()->SetTitleOffset(1.44);
+   h->GetXaxis()->SetTitleOffset(1.2);
    h->GetYaxis()->CenterTitle();
-   h->GetYaxis()->SetTitleOffset(1.44);
+   h->GetYaxis()->SetTitleOffset(1.2);
 }
 
 void haxes(TH1* h, float ymin, float ymax) {
