@@ -117,10 +117,10 @@ int extract(const char* config, const char* output) {
 
       if (do_hlt_branches)
          for (auto const& b : hlt)
-            elet->hlt.push_back(b);
+            elet->hlt->push_back(b);
 
       if (do_mc_branches) {
-         elet->mcRecoMatchIndex.assign(evtt->nMC, -1);
+         elet->mcRecoMatchIndex->assign(evtt->nMC, -1);
          for (int j=0; j<evtt->nEle; ++j) {
             int match = -1;
             float maxpt = -1;
@@ -141,8 +141,8 @@ int extract(const char* config, const char* output) {
                }
             }
 
-            elet->eleGenMatchIndex.push_back(match);
-            if (match != -1) { elet->mcRecoMatchIndex[match] = j; }
+            elet->eleGenMatchIndex->push_back(match);
+            if (match != -1) { (*elet->mcRecoMatchIndex)[match] = j; }
          }
       }
 
@@ -161,13 +161,13 @@ int extract(const char* config, const char* output) {
       if (do_hlt_branches) {
          for (uint32_t j = 0; j < e20_pt->size(); ++j) {
             auto const& o = (*e20_pt)[i];
-            if (std::find(elet->pt_e20.begin(), elet->pt_e20.end(), o)
-                  == elet->pt_e20.end()) {
-               elet->n_e20.push_back(std::count(
+            if (std::find(elet->pt_e20->begin(), elet->pt_e20->end(), o)
+                  == elet->pt_e20->end()) {
+               elet->n_e20->push_back(std::count(
                   e20_pt->begin(), e20_pt->end(), o));
-               elet->pt_e20.push_back((*e20_pt)[j]);
-               elet->eta_e20.push_back((*e20_eta)[j]);
-               elet->phi_e20.push_back((*e20_phi)[j]);
+               elet->pt_e20->push_back((*e20_pt)[j]);
+               elet->eta_e20->push_back((*e20_eta)[j]);
+               elet->phi_e20->push_back((*e20_phi)[j]);
             }
          }
       }

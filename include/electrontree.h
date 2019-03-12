@@ -11,16 +11,6 @@
 #include "eventtree.h"
 #include "l1tree.h"
 
-#define BRANCHES(ACTION, ...)                                           \
-   B_VAR_D(ACTION, ## __VA_ARGS__)                                      \
-   B_VAR_L(ACTION, ## __VA_ARGS__)                                      \
-   B_VAR_M(ACTION, ## __VA_ARGS__)                                      \
-   B_VAR_N(ACTION, ## __VA_ARGS__)                                      \
-   B_VEC_D(ACTION, ## __VA_ARGS__)                                      \
-   B_VEC_L(ACTION, ## __VA_ARGS__)                                      \
-   B_VEC_M(ACTION, ## __VA_ARGS__)                                      \
-   B_VEC_N(ACTION, ## __VA_ARGS__)                                      \
-
 #define B_VAR_D(ACTION, ...)                                            \
    ACTION(UInt_t, run, ## __VA_ARGS__)                                  \
    ACTION(ULong64_t, event, ## __VA_ARGS__)                             \
@@ -163,28 +153,32 @@ class electrontree {
          B_VAR_L(INVALID)
          B_VAR_M(INVALID)
          B_VAR_N(INVALID)
+         B_VEC_D(NEWVEC)
+         B_VEC_L(NEWVEC)
+         B_VEC_M(NEWVEC)
+         B_VEC_N(NEWVEC)
       };
 
       electrontree(TTree* t, bool do_mc_branches, bool do_l1_branches)
-         : electrontree() {
-            this->do_mc_branches = do_mc_branches;
-            this->do_l1_branches = do_l1_branches;
-            branch(t);
-         };
+            : electrontree(do_mc_branches, do_l1_branches) {
+         this->do_mc_branches = do_mc_branches;
+         this->do_l1_branches = do_l1_branches;
+         branch(t);
+      };
 
       ~electrontree() {};
 
       void branch(TTree* t) {
-         B_VAR_D(CREATE, t)
-         B_VEC_D(CREATE, t)
+         B_VAR_D(BRNREF, t)
+         B_VEC_D(BRNVAR, t)
          if (do_l1_branches) {
-            B_VAR_L(CREATE, t)
-            B_VEC_L(CREATE, t) }
+            B_VAR_L(BRNREF, t)
+            B_VEC_L(BRNVAR, t) }
          if (do_mc_branches) {
-            B_VAR_M(CREATE, t)
-            B_VEC_M(CREATE, t) }
-         B_VAR_N(CREATE, t)
-         B_VEC_N(CREATE, t)
+            B_VAR_M(BRNREF, t)
+            B_VEC_M(BRNVAR, t) }
+         B_VAR_N(BRNREF, t)
+         B_VEC_N(BRNVAR, t)
       };
 
       void clear() {
@@ -209,7 +203,14 @@ class electrontree {
          }
       };
 
-      BRANCHES(DECLARE)
+      B_VAR_D(DECLARE)
+      B_VAR_L(DECLARE)
+      B_VAR_M(DECLARE)
+      B_VAR_N(DECLARE)
+      B_VEC_D(DECLPTR)
+      B_VEC_L(DECLPTR)
+      B_VEC_M(DECLPTR)
+      B_VEC_N(DECLPTR)
 
    private:
       bool do_mc_branches;
