@@ -153,12 +153,14 @@ class electrontree {
          this->do_l1_branches = do_l1_branches;
 
          B_VAR_D(INVALID)
-         B_VAR_L(INVALID)
-         B_VAR_M(INVALID)
-         B_VAR_N(INVALID)
          B_VEC_D(NEWVEC)
-         B_VEC_L(NEWVEC)
-         B_VEC_M(NEWVEC)
+         if (do_l1_branches) {
+            B_VAR_L(INVALID)
+            B_VEC_L(NEWVEC) }
+         if (do_mc_branches) {
+            B_VAR_M(INVALID)
+            B_VEC_M(NEWVEC) }
+         B_VAR_N(INVALID)
          B_VEC_N(NEWVEC)
       };
 
@@ -202,8 +204,10 @@ class electrontree {
 
       void clear() {
          B_VEC_D(CLEAR)
-         B_VEC_L(CLEAR)
-         B_VEC_M(CLEAR)
+         if (do_l1_branches) {
+            B_VEC_L(CLEAR) }
+         if (do_mc_branches) {
+            B_VEC_M(CLEAR) }
          B_VEC_N(CLEAR)
       };
 
