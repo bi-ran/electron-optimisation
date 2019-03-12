@@ -167,6 +167,11 @@ class electrontree {
          branch(t);
       };
 
+      electrontree(bool do_mc_branches, bool do_l1_branches, TTree* t)
+            : electrontree(do_mc_branches, do_l1_branches) {
+         read(t);
+      };
+
       ~electrontree() {};
 
       void branch(TTree* t) {
@@ -180,6 +185,19 @@ class electrontree {
             B_VEC_M(BRNVAR, t) }
          B_VAR_N(BRNREF, t)
          B_VEC_N(BRNVAR, t)
+      };
+
+      void read(TTree* t) {
+         B_VAR_D(RREF, t)
+         B_VEC_D(RVAR, t)
+         if (do_l1_branches) {
+            B_VAR_L(RREF, t)
+            B_VEC_L(RVAR, t) }
+         if (do_mc_branches) {
+            B_VAR_M(RREF, t)
+            B_VEC_M(RVAR, t) }
+         B_VAR_N(RREF, t)
+         B_VEC_N(RVAR, t)
       };
 
       void clear() {
