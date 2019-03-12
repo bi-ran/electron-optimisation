@@ -107,8 +107,9 @@
 
 class eventtree {
    public:
-      eventtree() {
-         do_mc_branches = 0;
+      eventtree(bool do_mc_branches) {
+         this->do_mc_branches = do_mc_branches;
+
          B_AVE_D(ZERO)
          B_ARE_D(ZERO)
          if (do_mc_branches) {
@@ -117,8 +118,7 @@ class eventtree {
       };
 
       eventtree(TTree* t, bool do_mc_branches)
-            : eventtree() {
-         this->do_mc_branches = do_mc_branches;
+            : eventtree(do_mc_branches) {
          read(t);
       };
 
@@ -132,12 +132,13 @@ class eventtree {
             B_ARE_M(RREF, t) }
       };
 
-      bool do_mc_branches;
-
       B_AVE_D(DECLARE)
       B_AVE_M(DECLARE)
       B_ARE_D(DECLPTR)
       B_ARE_M(DECLPTR)
+
+   private:
+      bool do_mc_branches;
 };
 
 #endif  /* EVENTTREE_H */

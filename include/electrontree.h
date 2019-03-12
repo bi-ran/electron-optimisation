@@ -148,7 +148,10 @@
 
 class electrontree {
    public:
-      electrontree() {
+      electrontree(bool do_mc_branches, bool do_l1_branches) {
+         this->do_mc_branches = do_mc_branches;
+         this->do_l1_branches = do_l1_branches;
+
          B_VAR_D(INVALID)
          B_VAR_L(INVALID)
          B_VAR_M(INVALID)
@@ -161,8 +164,6 @@ class electrontree {
 
       electrontree(TTree* t, bool do_mc_branches, bool do_l1_branches)
             : electrontree(do_mc_branches, do_l1_branches) {
-         this->do_mc_branches = do_mc_branches;
-         this->do_l1_branches = do_l1_branches;
          branch(t);
       };
 
