@@ -153,6 +153,11 @@ int extract(const char* config, const char* output) {
       elet->hiHF = hiHF;
       elet->ncoll = do_mc_branches ? ncoll(hiBin) : 1;
 
+      for (int j=0; j<elet->nEle; ++j) {
+         elet->eleTrkPtRelErr->push_back(
+            (*elet->eleTrkPtErr)[j] / (*elet->eleTrkPt)[j]);
+      }
+
       if (do_hlt_branches) {
          for (uint32_t j = 0; j < e20_pt->size(); ++j) {
             auto const& o = (*e20_pt)[i];

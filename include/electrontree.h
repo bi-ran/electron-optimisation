@@ -147,6 +147,7 @@
    ACTION(std::vector<float>, mcTrkIsoDR04, ## __VA_ARGS__)             \
 
 #define B_VEC_N(ACTION, ...)                                            \
+   ACTION(std::vector<float>, eleTrkPtRelErr, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, eleGenMatchIndex, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, mcRecoMatchIndex, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, hlt, ## __VA_ARGS__)                        \
