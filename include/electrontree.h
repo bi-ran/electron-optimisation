@@ -149,14 +149,14 @@
 
 class electrontree {
    public:
-      electrontree(TTree* t, bool do_mc_branches, bool do_l1_branches)
-            : electrontree(do_mc_branches, do_l1_branches) {
+      electrontree(TTree* t, bool mc_branches, bool l1_branches)
+            : electrontree(mc_branches, l1_branches) {
          B_VAR_D(INVALID)
          B_VEC_D(NEWVEC)
-         if (do_l1_branches) {
+         if (l1_branches) {
             B_VAR_L(INVALID)
             B_VEC_L(NEWVEC) }
-         if (do_mc_branches) {
+         if (mc_branches) {
             B_VAR_M(INVALID)
             B_VEC_M(NEWVEC) }
          B_VAR_N(INVALID)
@@ -165,14 +165,14 @@ class electrontree {
          branch(t);
       };
 
-      electrontree(bool do_mc_branches, bool do_l1_branches, TTree* t)
-            : electrontree(do_mc_branches, do_l1_branches) {
+      electrontree(bool mc_branches, bool l1_branches, TTree* t)
+            : electrontree(mc_branches, l1_branches) {
          B_VAR_D(ZERO)
          B_VEC_D(ZERO)
-         if (do_l1_branches) {
+         if (l1_branches) {
             B_VAR_L(ZERO)
             B_VEC_L(ZERO) }
-         if (do_mc_branches) {
+         if (mc_branches) {
             B_VAR_M(ZERO)
             B_VEC_M(ZERO) }
          B_VAR_N(ZERO)
@@ -186,10 +186,10 @@ class electrontree {
       void branch(TTree* t) {
          B_VAR_D(BRNREF, t)
          B_VEC_D(BRNVAR, t)
-         if (do_l1_branches) {
+         if (l1_branches) {
             B_VAR_L(BRNREF, t)
             B_VEC_L(BRNVAR, t) }
-         if (do_mc_branches) {
+         if (mc_branches) {
             B_VAR_M(BRNREF, t)
             B_VEC_M(BRNVAR, t) }
          B_VAR_N(BRNREF, t)
@@ -199,10 +199,10 @@ class electrontree {
       void read(TTree* t) {
          B_VAR_D(RREF, t)
          B_VEC_D(RREF, t)
-         if (do_l1_branches) {
+         if (l1_branches) {
             B_VAR_L(RREF, t)
             B_VEC_L(RREF, t) }
-         if (do_mc_branches) {
+         if (mc_branches) {
             B_VAR_M(RREF, t)
             B_VEC_M(RREF, t) }
          B_VAR_N(RREF, t)
@@ -211,25 +211,25 @@ class electrontree {
 
       void clear() {
          B_VEC_D(CLEAR)
-         if (do_l1_branches) {
+         if (l1_branches) {
             B_VEC_L(CLEAR) }
-         if (do_mc_branches) {
+         if (mc_branches) {
             B_VEC_M(CLEAR) }
          B_VEC_N(CLEAR)
       };
 
-      void copy(eventtree* evtt) {
-         B_VAR_D(VARCOPY, evtt)
-         B_VEC_D(VECCOPY, evtt)
-         if (do_mc_branches) {
-            B_VAR_M(VARCOPY, evtt)
-            B_VEC_M(VECCOPY, evtt) }
+      void copy(eventtree* t) {
+         B_VAR_D(VARCOPY, t)
+         B_VEC_D(VECCOPY, t)
+         if (mc_branches) {
+            B_VAR_M(VARCOPY, t)
+            B_VEC_M(VECCOPY, t) }
       };
 
-      void copy(l1tree* l1t) {
-         if (do_l1_branches) {
-            B_VAR_L(VARCOPY, l1t)
-            B_VEC_L(VECCOPY, l1t)
+      void copy(l1tree* t) {
+         if (l1_branches) {
+            B_VAR_L(VARCOPY, t)
+            B_VEC_L(VECCOPY, t)
          }
       };
 
@@ -243,12 +243,12 @@ class electrontree {
       B_VEC_N(DECLPTR)
 
    private:
-      bool do_mc_branches;
-      bool do_l1_branches;
+      bool mc_branches;
+      bool l1_branches;
 
-      electrontree(bool do_mc_branches, bool do_l1_branches) {
-         this->do_mc_branches = do_mc_branches;
-         this->do_l1_branches = do_l1_branches;
+      electrontree(bool mc_branches, bool l1_branches) {
+         this->mc_branches = mc_branches;
+         this->l1_branches = l1_branches;
       };
 };
 

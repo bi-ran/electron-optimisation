@@ -31,22 +31,22 @@
 
 class l1tree {
    public:
-      l1tree(bool do_l1_branches) {
-         this->do_l1_branches = do_l1_branches;
+      l1tree(bool l1_branches) {
+         this->l1_branches = l1_branches;
 
          B_AVL_L(ZERO)
          B_ARL_L(ZERO)
       };
 
-      l1tree(TTree* t, bool do_l1_branches)
-            : l1tree(do_l1_branches) {
+      l1tree(TTree* t, bool l1_branches)
+            : l1tree(l1_branches) {
          read(t);
       };
 
       ~l1tree() { };
 
       void read(TTree* t) {
-         if (do_l1_branches) {
+         if (l1_branches) {
             B_AVL_L(RREF, t)
             B_ARL_L(RVAR, t) }
       };
@@ -55,7 +55,7 @@ class l1tree {
       B_ARL_L(DECLPTR)
 
    private:
-      bool do_l1_branches;
+      bool l1_branches;
 };
 
 #endif  /* L1TREE_H */
