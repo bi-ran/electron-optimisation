@@ -85,6 +85,7 @@
    ACTION(std::vector<float>, elePFChIso04, ## __VA_ARGS__)             \
    ACTION(std::vector<float>, elePFPhoIso04, ## __VA_ARGS__)            \
    ACTION(std::vector<float>, elePFNeuIso04, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleEffAreaTimesRho, ## __VA_ARGS__)       \
    ACTION(std::vector<float>, eleR9, ## __VA_ARGS__)                    \
    ACTION(std::vector<float>, eleE3x3, ## __VA_ARGS__)                  \
    ACTION(std::vector<float>, eleE5x5, ## __VA_ARGS__)                  \
