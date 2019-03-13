@@ -46,7 +46,7 @@ int extract(const char* config, const char* output) {
    TChain* cevt = chain_from_files(files, "hiEvtAnalyzer/HiTree", true);
    TChain* cl1 = chain_from_files(files, "l1object/L1UpgradeFlatTree", l1_branches);
    TChain* chlt = chain_from_files(files, "hltanalysis/HltTree", hlt_branches);
-   TChain* ce20 = chain_from_files(files, "hltobject/HLT_HIEle20Gsf_v", hlt_branches);
+   TChain* cobj = chain_from_files(files, "hltobject/HLT_HIEle20Gsf_v", hlt_branches);
 
    int hiBin; RREF(int, hiBin, cevt);
    float hiHF; RREF(float, hiHF, cevt);
@@ -59,15 +59,15 @@ int extract(const char* config, const char* output) {
       }
    }
 
-   std::vector<double>* e20_pt = 0;
-   std::vector<double>* e20_eta = 0;
-   std::vector<double>* e20_phi = 0;
+   std::vector<double>* obj_pt = 0;
+   std::vector<double>* obj_eta = 0;
+   std::vector<double>* obj_phi = 0;
 
    if (hlt_branches) {
-      ce20->SetBranchStatus("pt", 1);
-      ce20->SetBranchAddress("pt", &e20_pt);
-      ce20->SetBranchAddress("eta", &e20_eta);
-      ce20->SetBranchAddress("phi", &e20_phi);
+      cobj->SetBranchStatus("pt", 1);
+      cobj->SetBranchAddress("pt", &obj_pt);
+      cobj->SetBranchAddress("eta", &obj_eta);
+      cobj->SetBranchAddress("phi", &obj_phi);
    }
 
    eventtree* evtt = new eventtree(ceg, mc_branches);
@@ -91,7 +91,7 @@ int extract(const char* config, const char* output) {
 
       if (hlt_branches) {
          chlt->GetEntry(i);
-         ce20->GetEntry(i);
+         cobj->GetEntry(i);
       }
 
       if (l1_branches)
@@ -143,15 +143,15 @@ int extract(const char* config, const char* output) {
       }
 
       if (hlt_branches) {
-         for (uint32_t j = 0; j < e20_pt->size(); ++j) {
-            auto const& o = (*e20_pt)[i];
-            if (std::find(elet->pt_e20->begin(), elet->pt_e20->end(), o)
-                  == elet->pt_e20->end()) {
-               elet->n_e20->push_back(std::count(
-                  e20_pt->begin(), e20_pt->end(), o));
-               elet->pt_e20->push_back((*e20_pt)[j]);
-               elet->eta_e20->push_back((*e20_eta)[j]);
-               elet->phi_e20->push_back((*e20_phi)[j]);
+         for (uint32_t j = 0; j < obj_pt->size(); ++j) {
+            auto const& o = (*obj_pt)[i];
+            if (std::find(elet->pt_obj->begin(), elet->pt_obj->end(), o)
+                  == elet->pt_obj->end()) {
+               elet->n_obj->push_back(std::count(
+                  obj_pt->begin(), obj_pt->end(), o));
+               elet->pt_obj->push_back((*obj_pt)[j]);
+               elet->eta_obj->push_back((*obj_eta)[j]);
+               elet->phi_obj->push_back((*obj_phi)[j]);
             }
          }
       }

@@ -142,10 +142,10 @@
    ACTION(std::vector<int>, eleGenMatchIndex, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, mcRecoMatchIndex, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, hlt, ## __VA_ARGS__)                        \
-   ACTION(std::vector<double>, pt_e20, ## __VA_ARGS__)                  \
-   ACTION(std::vector<double>, eta_e20, ## __VA_ARGS__)                 \
-   ACTION(std::vector<double>, phi_e20, ## __VA_ARGS__)                 \
-   ACTION(std::vector<int>, n_e20, ## __VA_ARGS__)                      \
+   ACTION(std::vector<double>, pt_obj, ## __VA_ARGS__)                  \
+   ACTION(std::vector<double>, eta_obj, ## __VA_ARGS__)                 \
+   ACTION(std::vector<double>, phi_obj, ## __VA_ARGS__)                 \
+   ACTION(std::vector<int>, n_obj, ## __VA_ARGS__)                      \
 
 class electrontree {
    public:
