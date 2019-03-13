@@ -3,6 +3,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
+#include "TRandom.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TLegend.h"
@@ -31,7 +32,8 @@ float area_for_abs_sceta(float eta) {
     return areas[ieta];
 }
 
-void generate_bins_from(std::vector<float>& edges, int& count, std::string tag) {
+void generate_bins_from(std::vector<float>& edges, int& count,
+                        std::string tag) {
     if (count && edges.size() != 2)
         printf("invalid bin configuration for %s\n", tag.data());
 
@@ -46,6 +48,58 @@ void generate_bins_from(std::vector<float>& edges, int& count, std::string tag) 
     } else {
         count = edges.size() - 1;
     }
+}
+
+double get_cutoff_point(TH1D* hist, double cutoff) {
+    double quantile = 9999.;
+    hist->GetQuantiles(1, &quantile, &cutoff);
+
+    return quantile;
+}
+
+float evaluate_cutoff_error(TH1D* slice, TH1D* h_isooverrho, int ieta,
+                            int irho, float rho_average, double cutoff,
+                            int nisos, std::vector<float>& isos) {
+    TH1D* h_trial_cutoffs = new TH1D(
+        Form("h_trial_cutoffs_eta%i_rho%i", ieta, irho), "", nisos, &isos[0]);
+
+    int zero_size = slice->GetBinContent(0);
+    int sample_size = slice->GetSumOfWeights();
+
+    constexpr int trials = 100;
+    for (int i = 0; i < trials; ++i) {
+        int trial_size_zero = gRandom->Poisson(zero_size);
+        int trial_size_nonzero = gRandom->Poisson(sample_size - zero_size);
+
+        TH1D* h_trial = new TH1D(Form("trial%i_eta%i_rho%i", i, ieta, irho),
+                                 "", nisos, &isos[0]);
+        h_trial->SetBinContent(0, trial_size_zero);
+        for (int j = 0; j < trial_size_nonzero; ++j)
+            h_trial->Fill(h_isooverrho->GetRandom() * rho_average);
+
+        double trial_quantile = get_cutoff_point(h_trial, cutoff);
+        h_trial_cutoffs->Fill(trial_quantile);
+    }
+
+    return h_trial_cutoffs->GetRMS();
+}
+
+TH1D* find_90pc_cutoff(TH2D* h_iso_rho, TH1D* h_isooverrho, double cutoff,
+                           int ieta, int nrhos, std::vector<float>& rhos,
+                           int nisos, std::vector<float>& isos) {
+    std::string index = std::to_string(ieta);
+    TH1D* h_90pc_cutoff = new TH1D(("p_iso_rho_eta" + index).data(), "",
+                                   nrhos, &rhos[0]);
+
+    for (int i = 1; i <= nrhos; ++i) {
+        auto slice = h_iso_rho->ProjectionY(Form("_slice%i", i), i, i);
+        float rho_average = h_iso_rho->GetXaxis()->GetBinCenter(i);
+        h_90pc_cutoff->SetBinContent(i, get_cutoff_point(slice, cutoff));
+        h_90pc_cutoff->SetBinError(i, evaluate_cutoff_error(
+            slice, h_isooverrho, ieta, i, rho_average, cutoff, nisos, isos));
+    }
+
+    return h_90pc_cutoff;
 }
 
 int area4(char const* config, char const* output) {
@@ -63,9 +117,10 @@ int area4(char const* config, char const* output) {
     auto nisos = conf->get<int>("nisos");
 
     auto min_pt = conf->get<float>("min_pt");
-
     auto min_rho_fit = conf->get<float>("min_rho_fit");
     auto max_rho_fit = conf->get<float>("max_rho_fit");
+
+    auto use_90pc_eff = conf->get<bool>("use_90pc_eff");
 
     generate_bins_from(etas, netas, "eta");
     generate_bins_from(rhos, nrhos, "rho");
@@ -76,23 +131,18 @@ int area4(char const* config, char const* output) {
     auto e = new electrontree(true, false, false, t);
 
     TFile* fout = new TFile(output, "recreate");
-    fout->cd();
 
     TH1::SetDefaultSumw2();
-
-    TH2F** h_iso_rho = new TH2F*[netas];
-    TProfile** p_iso_rho = new TProfile*[netas];
-    TH1F** h_isooverrho = new TH1F*[netas];
-
+    TH2D** h_iso_rho = new TH2D*[netas];
+    TH1D** p_iso_rho = new TH1D*[netas];
+    TH1D** h_isooverrho = new TH1D*[netas];
     TF1** f_iso_rho = new TF1*[netas];
 
     for (int i = 0; i < netas; ++i) {
         std::string index = std::to_string(i);
-        h_iso_rho[i] = new TH2F(("h_iso_rho_eta" + index).data(),
+        h_iso_rho[i] = new TH2D(("h_iso_rho_eta" + index).data(),
                                 "", nrhos, &rhos[0], nisos, &isos[0]);
-        p_iso_rho[i] = new TProfile(("p_iso_rho_eta" + index).data(),
-                                    "", nrhos, &rhos[0]);
-        h_isooverrho[i] = new TH1F(("h_isooverrho_eta" + index).data(),
+        h_isooverrho[i] = new TH1D(("h_isooverrho_eta" + index).data(),
                                    "", nrhos, &rhos[0]);
         f_iso_rho[i] = new TF1(("f_iso_rho_eta" + index).data(),
                                "pol1", min_rho_fit, max_rho_fit);
@@ -111,10 +161,8 @@ int area4(char const* config, char const* output) {
         for (int j = 0; j < e->nEle; ++j) {
             if ((*e->elePt)[j] < min_pt)
                 continue;
-
             if ((*e->eleGenMatchIndex)[j] < 0)
                 continue;
-
             float eta = (*e->eleSCEta)[j];
             if (eta < etas[0] || eta > etas[netas])
                 continue;
@@ -129,7 +177,6 @@ int area4(char const* config, char const* output) {
             for (; ieta < netas && eta > etas[ieta + 1]; ++ieta);
 
             h_iso_rho[ieta]->Fill(rho, sum_iso);
-            p_iso_rho[ieta]->Fill(rho, sum_iso);
             h_isooverrho[ieta]->Fill(sum_iso / rho);
         }
     }
@@ -139,9 +186,15 @@ int area4(char const* config, char const* output) {
     float* eff_area_err = new float[netas];
 
     for (int i = 0; i < netas; ++i) {
-        f_iso_rho[i]->SetParameters(1, 0.1);
-
         std::string index = std::to_string(i);
+
+        p_iso_rho[i] = !use_90pc_eff
+            ? h_iso_rho[i]->ProfileX(("p_iso_rho_eta" + index).data())
+            /* derive 90% efficiency cutoff */
+            : find_90pc_cutoff(h_iso_rho[i], h_isooverrho[i], 0.9, i, nrhos,
+                               rhos, nisos, isos);
+
+        f_iso_rho[i]->SetParameters(1, 0.1);
         p_iso_rho[i]->Fit(("f_iso_rho_eta" + index).data(), "RME");
 
         eff_area[i] = f_iso_rho[i]->GetParameter(1);
@@ -156,6 +209,8 @@ int area4(char const* config, char const* output) {
     /* painting */
     TCanvas* c1 = new TCanvas("c1", "", 400, 400);
 
+    std::string tag = use_90pc_eff ? "90pc" : "meaniso";
+
     {
         for (int i = 0; i < netas; ++i) {
             htitle(h_iso_rho[i], Form(
@@ -163,7 +218,7 @@ int area4(char const* config, char const* output) {
             h_iso_rho[i]->SetStats(0);
             h_iso_rho[i]->Draw("colz");
 
-            c1->SaveAs(Form("a4_iso_rho_eta%i.png", i));
+            c1->SaveAs(Form("a4_iso_rho_eta%i-%s.png", i, tag.data()));
         }
     }
 
@@ -175,7 +230,7 @@ int area4(char const* config, char const* output) {
             p_iso_rho[i]->SetStats(0);
             p_iso_rho[i]->Draw("pe");
 
-            c1->SaveAs(Form("a4_p_iso_rho_eta%i.png", i));
+            c1->SaveAs(Form("a4_p_iso_rho_eta%i-%s.png", i, tag.data()));
         }
     }
 
