@@ -18,6 +18,19 @@ inline float dphi_2s1f1b(float phi1, float phi2) {
    return dphi;
 }
 
+TChain* chain_from_files(std::vector<std::string>& files, std::string name,
+                         bool flag) {
+   if (!flag) return nullptr;
+
+   TChain* c = new TChain(name.data());
+   for (auto const& f : files)
+      c->Add(f.data());
+
+   c->SetBranchStatus("*", 0);
+
+   return c;
+}
+
 int extract(const char* config, const char* output) {
    configurer* conf = new configurer(config);
 
@@ -29,43 +42,14 @@ int extract(const char* config, const char* output) {
 
    auto max_entries = conf->get<int64_t>("max_entries");
 
-   TChain* ceg = new TChain("ggHiNtuplizerGED/EventTree");
-   TChain* cevt = new TChain("hiEvtAnalyzer/HiTree");
-   TChain* cl1 = (l1_branches) ? new TChain("l1object/L1UpgradeFlatTree") : 0;
-   TChain* chlt = (hlt_branches) ? new TChain("hltanalysis/HltTree") : 0;
-   TChain* ce20 = (hlt_branches) ? new TChain("hltobject/HLT_HIEle20Gsf_v") : 0;
+   TChain* ceg = chain_from_files(files, "ggHiNtuplizerGED/EventTree", true);
+   TChain* cevt = chain_from_files(files, "hiEvtAnalyzer/HiTree", true);
+   TChain* cl1 = chain_from_files(files, "l1object/L1UpgradeFlatTree", l1_branches);
+   TChain* chlt = chain_from_files(files, "hltanalysis/HltTree", hlt_branches);
+   TChain* ce20 = chain_from_files(files, "hltobject/HLT_HIEle20Gsf_v", hlt_branches);
 
-   for (const auto& file : files) {
-      ceg->Add(file.data());
-      cevt->Add(file.data());
-
-      if (l1_branches)
-         cl1->Add(file.data());
-
-      if (hlt_branches) {
-         chlt->Add(file.data());
-         ce20->Add(file.data());
-      }
-   }
-
-   ceg->SetBranchStatus("*", 0);
-   cevt->SetBranchStatus("*", 0);
-
-   if (l1_branches)
-      cl1->SetBranchStatus("*", 0);
-
-   if (hlt_branches) {
-      chlt->SetBranchStatus("*", 0);
-      ce20->SetBranchStatus("*", 0);
-   }
-
-   int hiBin;
-   cevt->SetBranchStatus("hiBin", 1);
-   cevt->SetBranchAddress("hiBin", &hiBin);
-
-   float hiHF;
-   cevt->SetBranchStatus("hiHF", 1);
-   cevt->SetBranchAddress("hiHF", &hiHF);
+   int hiBin; RREF(int, hiBin, cevt);
+   float hiHF; RREF(float, hiHF, cevt);
 
    std::vector<int> hlt(paths.size());
    if (hlt_branches) {
