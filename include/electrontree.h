@@ -141,6 +141,8 @@
    ACTION(std::vector<float>, eleTrkPtRelErr, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, eleGenMatchIndex, ## __VA_ARGS__)           \
    ACTION(std::vector<int>, mcRecoMatchIndex, ## __VA_ARGS__)           \
+
+#define B_VEC_H(ACTION, ...)                                            \
    ACTION(std::vector<int>, hlt, ## __VA_ARGS__)                        \
    ACTION(std::vector<double>, pt_obj, ## __VA_ARGS__)                  \
    ACTION(std::vector<double>, eta_obj, ## __VA_ARGS__)                 \
@@ -149,8 +151,9 @@
 
 class electrontree {
    public:
-      electrontree(TTree* t, bool mc_branches, bool l1_branches)
-            : electrontree(mc_branches, l1_branches) {
+      electrontree(TTree* t, bool mc_branches, bool l1_branches,
+                   bool hlt_branches)
+            : electrontree(mc_branches, l1_branches, hlt_branches) {
          B_VAR_D(INVALID)
          B_VEC_D(NEWVEC)
          if (l1_branches) {
@@ -161,12 +164,15 @@ class electrontree {
             B_VEC_M(NEWVEC) }
          B_VAR_N(INVALID)
          B_VEC_N(NEWVEC)
+         if (hlt_branches) {
+            B_VEC_H(NEWVEC) }
 
          branch(t);
       };
 
-      electrontree(bool mc_branches, bool l1_branches, TTree* t)
-            : electrontree(mc_branches, l1_branches) {
+      electrontree(bool mc_branches, bool l1_branches, bool hlt_branches,
+                   TTree* t)
+            : electrontree(mc_branches, l1_branches, hlt_branches) {
          B_VAR_D(ZERO)
          B_VEC_D(ZERO)
          if (l1_branches) {
@@ -177,6 +183,8 @@ class electrontree {
             B_VEC_M(ZERO) }
          B_VAR_N(ZERO)
          B_VEC_N(ZERO)
+         if (hlt_branches) {
+            B_VEC_H(ZERO) }
 
          read(t);
       };
@@ -194,6 +202,8 @@ class electrontree {
             B_VEC_M(BRNVAR, t) }
          B_VAR_N(BRNREF, t)
          B_VEC_N(BRNVAR, t)
+         if (hlt_branches) {
+            B_VEC_H(BRNVAR, t) }
       };
 
       void read(TTree* t) {
@@ -207,6 +217,8 @@ class electrontree {
             B_VEC_M(RREF, t) }
          B_VAR_N(RREF, t)
          B_VEC_N(RREF, t)
+         if (hlt_branches) {
+            B_VEC_H(RREF, t) }
       };
 
       void clear() {
@@ -216,6 +228,8 @@ class electrontree {
          if (mc_branches) {
             B_VEC_M(CLEAR) }
          B_VEC_N(CLEAR)
+         if (hlt_branches) {
+            B_VEC_H(CLEAR) }
       };
 
       void copy(eventtree* t) {
@@ -241,14 +255,17 @@ class electrontree {
       B_VEC_L(DECLPTR)
       B_VEC_M(DECLPTR)
       B_VEC_N(DECLPTR)
+      B_VEC_H(DECLPTR)
 
    private:
       bool mc_branches;
       bool l1_branches;
+      bool hlt_branches;
 
-      electrontree(bool mc_branches, bool l1_branches) {
+      electrontree(bool mc_branches, bool l1_branches, bool hlt_branches) {
          this->mc_branches = mc_branches;
          this->l1_branches = l1_branches;
+         this->hlt_branches = hlt_branches;
       };
 };
 

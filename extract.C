@@ -76,7 +76,8 @@ int extract(const char* config, const char* output) {
    TFile* fout = new TFile(output, "recreate");
    TTree* tout = new TTree("electrons", "electrons");
 
-   electrontree* elet = new electrontree(tout, mc_branches, l1_branches);
+   electrontree* elet = new electrontree(tout, mc_branches, l1_branches,
+                                         hlt_branches);
 
    const float mindr2 = 0.15 * 0.15;
 
