@@ -218,6 +218,7 @@ int area4(char const* config, char const* tag) {
             h_iso_rho[i]->SetStats(0);
             h_iso_rho[i]->Draw("colz");
 
+            c1->SetLogz(1);
             c1->SaveAs(Form("a4_iso_rho_eta%i-%s-%s.png", i, type.data(), tag));
         }
     }
@@ -225,11 +226,12 @@ int area4(char const* config, char const* tag) {
     {
         for (int i = 0; i < netas; ++i) {
             hstyle(p_iso_rho[i], 21, 1, 0.6);
-            hformat(p_iso_rho[i], 0.f, 15.f, Form(
+            hformat(p_iso_rho[i], 0.f, rhos.back(), Form(
                 "%.3f < |#eta| < %.3f;#rho;#LT#Sigma#it{iso}#GT", etas[i], etas[i+1]));
             p_iso_rho[i]->SetStats(0);
             p_iso_rho[i]->Draw("pe");
 
+            c1->SetLogz(1);
             c1->SaveAs(Form("a4_p_iso_rho_eta%i-%s-%s.png", i, type.data(), tag));
         }
     }
