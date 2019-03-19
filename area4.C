@@ -33,9 +33,9 @@ float area_for_abs_sceta(float eta) {
 }
 
 void generate_bins_from(std::vector<float>& edges, int& count,
-                        std::string tag) {
+                        std::string var) {
     if (count && edges.size() != 2)
-        printf("invalid bin configuration for %s\n", tag.data());
+        printf("invalid bin configuration for %s\n", var.data());
 
     if (count) {
         float base = edges[0];
@@ -102,7 +102,7 @@ TH1D* find_90pc_cutoff(TH2D* h_iso_rho, TH1D* h_isooverrho, double cutoff,
     return h_90pc_cutoff;
 }
 
-int area4(char const* config, char const* output) {
+int area4(char const* config, char const* tag) {
     auto conf = new configurer(config);
 
     auto input = conf->get<std::string>("input");
@@ -130,7 +130,7 @@ int area4(char const* config, char const* output) {
     TTree* t = (TTree*)f->Get("electrons");
     auto e = new electrontree(true, false, false, t);
 
-    TFile* fout = new TFile(output, "recreate");
+    TFile* fout = new TFile(Form("eff-area-%s.root", tag), "recreate");
 
     TH1::SetDefaultSumw2();
     TH2D** h_iso_rho = new TH2D*[netas];
@@ -209,7 +209,7 @@ int area4(char const* config, char const* output) {
     /* painting */
     TCanvas* c1 = new TCanvas("c1", "", 400, 400);
 
-    std::string tag = use_90pc_eff ? "90pc" : "meaniso";
+    std::string type = use_90pc_eff ? "90pc" : "meaniso";
 
     {
         for (int i = 0; i < netas; ++i) {
@@ -218,7 +218,7 @@ int area4(char const* config, char const* output) {
             h_iso_rho[i]->SetStats(0);
             h_iso_rho[i]->Draw("colz");
 
-            c1->SaveAs(Form("a4_iso_rho_eta%i-%s.png", i, tag.data()));
+            c1->SaveAs(Form("a4_iso_rho_eta%i-%s-%s.png", i, type.data(), tag));
         }
     }
 
@@ -230,7 +230,7 @@ int area4(char const* config, char const* output) {
             p_iso_rho[i]->SetStats(0);
             p_iso_rho[i]->Draw("pe");
 
-            c1->SaveAs(Form("a4_p_iso_rho_eta%i-%s.png", i, tag.data()));
+            c1->SaveAs(Form("a4_p_iso_rho_eta%i-%s-%s.png", i, type.data(), tag));
         }
     }
 
