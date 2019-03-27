@@ -117,8 +117,8 @@ int area4(char const* config, char const* tag) {
     auto nisos = conf->get<int>("nisos");
 
     auto min_pt = conf->get<float>("min_pt");
-    auto min_rho_fit = conf->get<float>("min_rho_fit");
-    auto max_rho_fit = conf->get<float>("max_rho_fit");
+    auto min_rho_fit = conf->get<std::vector<float>>("min_rho_fit");
+    auto max_rho_fit = conf->get<std::vector<float>>("max_rho_fit");
 
     auto use_90pc_eff = conf->get<bool>("use_90pc_eff");
 
@@ -145,7 +145,7 @@ int area4(char const* config, char const* tag) {
         h_isooverrho[i] = new TH1D(("h_isooverrho_eta" + index).data(),
                                    "", nrhos, &rhos[0]);
         f_iso_rho[i] = new TF1(("f_iso_rho_eta" + index).data(),
-                               "pol1", min_rho_fit, max_rho_fit);
+                               "pol1", min_rho_fit[i], max_rho_fit[i]);
     }
 
     int64_t nentries = t->GetEntries();
@@ -218,8 +218,12 @@ int area4(char const* config, char const* tag) {
             h_iso_rho[i]->SetStats(0);
             h_iso_rho[i]->Draw("colz");
 
+            hstyle(p_iso_rho[i], 21, 1, 0.6);
+            p_iso_rho[i]->SetStats(0);
+            p_iso_rho[i]->Draw("same pe");
+
             c1->SetLogz(1);
-            c1->SaveAs(Form("a4_iso_rho_eta%i-%s-%s.png", i, type.data(), tag));
+            c1->SaveAs(Form("a4_iso_rho_eta%i-%s-%s.pdf", i, type.data(), tag));
         }
     }
 
@@ -232,7 +236,7 @@ int area4(char const* config, char const* tag) {
             p_iso_rho[i]->Draw("pe");
 
             c1->SetLogz(1);
-            c1->SaveAs(Form("a4_p_iso_rho_eta%i-%s-%s.png", i, type.data(), tag));
+            c1->SaveAs(Form("a4_p_iso_rho_eta%i-%s-%s.pdf", i, type.data(), tag));
         }
     }
 
