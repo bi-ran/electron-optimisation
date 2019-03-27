@@ -137,6 +137,7 @@ int area4(char const* config, char const* tag) {
     TH1D** p_iso_rho = new TH1D*[netas];
     TH1D** h_isooverrho = new TH1D*[netas];
     TF1** f_iso_rho = new TF1*[netas];
+    TH2D** h_reliso_rho = new TH2D*[netas];
 
     for (int i = 0; i < netas; ++i) {
         std::string index = std::to_string(i);
@@ -146,6 +147,8 @@ int area4(char const* config, char const* tag) {
                                    "", nrhos, &rhos[0]);
         f_iso_rho[i] = new TF1(("f_iso_rho_eta" + index).data(),
                                "pol1", min_rho_fit[i], max_rho_fit[i]);
+        h_reliso_rho[i] = new TH2D(("h_reliso_rho_eta" + index).data(),
+                                   "", nrhos, &rhos[0], nisos, &isos[0]);
     }
 
     int64_t nentries = t->GetEntries();
@@ -170,8 +173,7 @@ int area4(char const* config, char const* tag) {
             /* i'm stupid and forgot to save rho */
             float area = area_for_abs_sceta(std::abs((*e->eleSCEta)[j]));
             float rho = (*e->eleEffAreaTimesRho)[j] / area;
-            float sum_iso = (*e->elePFChIso04)[j] + (*e->elePFPhoIso04)[j]
-                + (*e->elePFNeuIso04)[j];
+            float sum_iso = (*e->elePFPhoIso04)[j] + (*e->elePFNeuIso04)[j];
 
             int ieta = 0;
             for (; ieta < netas && eta > etas[ieta + 1]; ++ieta);
@@ -206,6 +208,33 @@ int area4(char const* config, char const* tag) {
                eff_area[i], eff_area_err[i]);
     }
 
+    for (int64_t i = 0; i < nentries; ++i) {
+        t->GetEntry(i);
+
+        for (int j = 0; j < e->nEle; ++j) {
+            if ((*e->elePt)[j] < min_pt)
+                continue;
+            if ((*e->eleGenMatchIndex)[j] < 0)
+                continue;
+            float eta = (*e->eleSCEta)[j];
+            if (eta < etas[0] || eta > etas[netas])
+                continue;
+
+            /* i'm stupid and forgot to save rho */
+            float area = area_for_abs_sceta(std::abs((*e->eleSCEta)[j]));
+            float rho = (*e->eleEffAreaTimesRho)[j] / area;
+
+            int ieta = 0;
+            for (; ieta < netas && eta > etas[ieta + 1]; ++ieta);
+
+            float rel_iso = ((*e->elePFChIso)[j]
+                + std::max(0.f, (*e->elePFNeuIso)[j] + + (*e->elePFPhoIso)[j]
+                    - rho * eff_area[ieta])) / (*e->elePt)[j];
+
+            h_reliso_rho[ieta]->Fill(rho, rel_iso);
+        }
+    }
+
     /* painting */
     TCanvas* c1 = new TCanvas("c1", "", 400, 400);
 
@@ -224,6 +253,18 @@ int area4(char const* config, char const* tag) {
 
             c1->SetLogz(1);
             c1->SaveAs(Form("a4_iso_rho_eta%i-%s-%s.pdf", i, type.data(), tag));
+        }
+    }
+
+    {
+        for (int i = 0; i < netas; ++i) {
+            htitle(h_reliso_rho[i], Form(
+                "%.3f < |#eta| < %.3f;#rho;#it{iso}_{rel}", etas[i], etas[i+1]));
+            h_reliso_rho[i]->SetStats(0);
+            h_reliso_rho[i]->Draw("colz");
+
+            c1->SetLogz(1);
+            c1->SaveAs(Form("a4_reliso_rho_eta%i-%s-%s.pdf", i, type.data(), tag));
         }
     }
 
