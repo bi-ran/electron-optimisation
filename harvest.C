@@ -200,7 +200,7 @@ int harvest(const char* output, const char* config) {
    hframe = (TH1D*)h[0]->Clone("hframe");
 
    float lmaxy = 0.84;
-   float lminy = lmaxy - 0.045 * (nonempty + headers.size());
+   float lminy = lmaxy - 0.03 * (nonempty + headers.size());
    TLegend* l1 = new TLegend(0.6, lminy, 0.96, lmaxy);
    lstyle(l1, 43, 12);
 
@@ -324,7 +324,7 @@ int harvest(const char* output, const char* config) {
 
    TLatex* t1 = new TLatex(); t1->SetTextFont(43); t1->SetTextSize(12);
    for (std::size_t l = 0; l < text.size(); ++l)
-      t1->DrawLatexNDC(0.16, 0.825 - 0.03 * l, text[l].data());
+      t1->DrawLatexNDC(0.16, 0.825 - 0.025 * l, text[l].data());
 
    c1->SaveAs(Form("figs/%s-%s.pdf", filename.data(), output));
    c1->SaveAs(Form("figs/%s-%s.png", filename.data(), output));
