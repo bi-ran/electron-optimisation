@@ -69,7 +69,7 @@ float evaluate_cutoff_error(TH1D* slice, TH1D* h_isooverrho, int ieta,
     constexpr int trials = 100;
     for (int i = 0; i < trials; ++i) {
         int trial_size_zero = gRandom->Poisson(zero_size);
-        int trial_size_nonzero = gRandom->Poisson(sample_size - zero_size);
+        int trial_size_nonzero = gRandom->Poisson(sample_size);
 
         TH1D* h_trial = new TH1D(Form("trial%i_eta%i_rho%i", i, ieta, irho),
                                  "", nisos, &isos[0]);
