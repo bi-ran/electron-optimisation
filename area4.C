@@ -293,5 +293,6 @@ int main(int argc, char* argv[]) {
     if (argc == 3)
         return area4(argv[1], argv[2]);
 
+    printf("usage: %s [config] [tag]\n", argv[0]);
     return 1;
 }
