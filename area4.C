@@ -79,6 +79,8 @@ float evaluate_cutoff_error(TH1D* slice, TH1D* h_isooverrho, int ieta,
 
         double trial_quantile = get_cutoff_point(h_trial, cutoff);
         h_trial_cutoffs->Fill(trial_quantile);
+
+        h_trial->SetDirectory(0);
     }
 
     return h_trial_cutoffs->GetRMS();
@@ -92,7 +94,8 @@ TH1D* find_90pc_cutoff(TH2D* h_iso_rho, TH1D* h_isooverrho, double cutoff,
                                    nrhos, &rhos[0]);
 
     for (int i = 1; i <= nrhos; ++i) {
-        auto slice = h_iso_rho->ProjectionY(Form("_slice%i", i), i, i);
+        auto slice = h_iso_rho->ProjectionY(
+            Form("h_iso_rho_eta%i_slice%i", ieta, i), i, i);
         float rho_average = h_iso_rho->GetXaxis()->GetBinCenter(i);
         h_90pc_cutoff->SetBinContent(i, get_cutoff_point(slice, cutoff));
         h_90pc_cutoff->SetBinError(i, evaluate_cutoff_error(
