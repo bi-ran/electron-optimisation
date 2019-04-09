@@ -111,10 +111,12 @@ int area4(char const* config, char const* tag) {
     auto etas = conf->get<std::vector<float>>("etas");
     auto rhos = conf->get<std::vector<float>>("rhos");
     auto isos = conf->get<std::vector<float>>("isos");
+    auto rels = conf->get<std::vector<float>>("rels");
 
     auto netas = conf->get<int>("netas");
     auto nrhos = conf->get<int>("nrhos");
     auto nisos = conf->get<int>("nisos");
+    auto nrels = conf->get<int>("nrels");
 
     auto min_pt = conf->get<float>("min_pt");
     auto min_rho_fit = conf->get<std::vector<float>>("min_rho_fit");
@@ -125,6 +127,7 @@ int area4(char const* config, char const* tag) {
     generate_bins_from(etas, netas, "eta");
     generate_bins_from(rhos, nrhos, "rho");
     generate_bins_from(isos, nisos, "iso");
+    generate_bins_from(rels, nrels, "rel");
 
     TFile* f = new TFile(input.data(), "read");
     TTree* t = (TTree*)f->Get("electrons");
