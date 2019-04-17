@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS  += -O2 -Wall -Werror -Wextra
 RCXXFLAGS := `root-config --cflags --libs`
 LDFLAGS   += -lconf -L./git/config/lib
-RLDFLAGS  := -lEG
+RLDFLAGS  := -lEG -lTMVA -lTMVAGui
 
 BUILDDIR = ./build
 
