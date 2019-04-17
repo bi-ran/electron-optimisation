@@ -31,6 +31,21 @@ TChain* chain_from_files(std::vector<std::string>& files, std::string name,
    return c;
 }
 
+float area_for_abs_sceta(float eta) {
+    static constexpr float areas[7] = {
+        0.1440, 0.1562, 0.1032, 0.0859, 0.1116, 0.1321, 0.1654
+    };
+
+    static constexpr float etas[7] = {
+        1.000, 1.479, 2.000, 2.200, 2.300, 2.400, 2.500
+    };
+
+    int ieta = 0;
+    for (; eta > etas[ieta] && ieta < 7; ++ieta);
+
+    return areas[ieta];
+}
+
 int extract(const char* config, const char* output) {
    configurer* conf = new configurer(config);
 
@@ -127,6 +142,7 @@ int extract(const char* config, const char* output) {
             }
 
             elet->eleGenMatchIndex->push_back(match);
+            elet->eleRefE->push_back(match < 0 ? -1 : (*elet->mcE)[match]);
             if (match != -1) { (*elet->mcRecoMatchIndex)[match] = j; }
          }
       }
@@ -141,6 +157,10 @@ int extract(const char* config, const char* output) {
       for (int j=0; j<elet->nEle; ++j) {
          elet->eleTrkPtRelErr->push_back(
             (*elet->eleTrkPtErr)[j] / (*elet->eleTrkPt)[j]);
+         elet->eledEtaSCSeed->push_back(
+            std::abs((*elet->eleSCEta)[j] - (*elet->eleSeedEta)[j]));
+         elet->eledPhiSCSeed->push_back(
+            dphi_2s1f1b((*elet->eleSCEta)[j], (*elet->eleSeedEta)[j]));
       }
 
       if (hlt_branches) {

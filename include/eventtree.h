@@ -40,6 +40,7 @@
    ACTION(ULong64_t, event, ## __VA_ARGS__)                             \
    ACTION(UInt_t, lumis, ## __VA_ARGS__)                                \
    ACTION(Int_t, nEle, ## __VA_ARGS__)                                  \
+   ACTION(Float_t, eleRho, ## __VA_ARGS__)                              \
 
 #define B_ARE_D(ACTION, ...)                                            \
    ACTION(std::vector<int>, eleCharge, ## __VA_ARGS__)                  \
@@ -98,7 +99,6 @@
    ACTION(std::vector<float>, elePFChIso04, ## __VA_ARGS__)             \
    ACTION(std::vector<float>, elePFPhoIso04, ## __VA_ARGS__)            \
    ACTION(std::vector<float>, elePFNeuIso04, ## __VA_ARGS__)            \
-   ACTION(std::vector<float>, eleRho, ## __VA_ARGS__)                   \
    ACTION(std::vector<float>, eleEffAreaTimesRho, ## __VA_ARGS__)       \
    ACTION(std::vector<float>, eleR9, ## __VA_ARGS__)                    \
    ACTION(std::vector<float>, eleE3x3, ## __VA_ARGS__)                  \
@@ -106,6 +106,31 @@
    ACTION(std::vector<float>, eleR9Full5x5, ## __VA_ARGS__)             \
    ACTION(std::vector<float>, eleE3x3Full5x5, ## __VA_ARGS__)           \
    ACTION(std::vector<float>, eleE5x5Full5x5, ## __VA_ARGS__)           \
+   ACTION(std::vector<int>, NEcalClusters, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSeedEn, ## __VA_ARGS__)                \
+   ACTION(std::vector<float>, eleSeedEta, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleSeedPhi, ## __VA_ARGS__)               \
+   ACTION(std::vector<float>, eleSeedCryEta, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleSeedCryPhi, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleSeedCryIeta, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleSeedCryIphi, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleSeedE3x3, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSeedE5x5, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSEE, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, eleSPP, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, eleSEP, ## __VA_ARGS__)                   \
+   ACTION(std::vector<float>, eleSeedEMax, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSeedE2nd, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSeedETop, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleSeedEBottom, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleSeedELeft, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleSeedERight, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleSeedE2x5Max, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleSeedE2x5Top, ## __VA_ARGS__)           \
+   ACTION(std::vector<float>, eleSeedE2x5Bottom, ## __VA_ARGS__)        \
+   ACTION(std::vector<float>, eleSeedE2x5Left, ## __VA_ARGS__)          \
+   ACTION(std::vector<float>, eleSeedE2x5Right, ## __VA_ARGS__)         \
+   ACTION(std::vector<float>, eleESOverRaw, ## __VA_ARGS__)             \
 
 class eventtree {
    public:
