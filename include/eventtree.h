@@ -40,7 +40,7 @@
    ACTION(ULong64_t, event, ## __VA_ARGS__)                             \
    ACTION(UInt_t, lumis, ## __VA_ARGS__)                                \
    ACTION(Int_t, nEle, ## __VA_ARGS__)                                  \
-   ACTION(Float_t, eleRho, ## __VA_ARGS__)                              \
+   ACTION(Float_t, rho, ## __VA_ARGS__)                                 \
 
 #define B_ARE_D(ACTION, ...)                                            \
    ACTION(std::vector<int>, eleCharge, ## __VA_ARGS__)                  \
@@ -131,6 +131,14 @@
    ACTION(std::vector<float>, eleSeedE2x5Left, ## __VA_ARGS__)          \
    ACTION(std::vector<float>, eleSeedE2x5Right, ## __VA_ARGS__)         \
    ACTION(std::vector<float>, eleESOverRaw, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleChargeMode, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleTrkQoverPMode, ## __VA_ARGS__)         \
+   ACTION(std::vector<float>, eleTrkPMode, ## __VA_ARGS__)              \
+   ACTION(std::vector<float>, eleTrkPtMode, ## __VA_ARGS__)             \
+   ACTION(std::vector<float>, eleTrkEtaMode, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleTrkPhiMode, ## __VA_ARGS__)            \
+   ACTION(std::vector<float>, eleTrkQoverPModeErr, ## __VA_ARGS__)      \
+   ACTION(std::vector<float>, eleTrkPtModeErr, ## __VA_ARGS__)          \
 
 class eventtree {
    public:
