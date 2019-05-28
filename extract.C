@@ -142,7 +142,7 @@ int extract(const char* config, const char* output) {
             }
 
             elet->eleGenMatchIndex->push_back(match);
-            elet->eleRefE->push_back(match < 0 ? -1 : (*elet->mcE)[match]);
+            elet->eleRefE->push_back(match < 0 ? -1 : (*evtt->mcE)[match]);
             if (match != -1) { (*elet->mcRecoMatchIndex)[match] = j; }
          }
       }
