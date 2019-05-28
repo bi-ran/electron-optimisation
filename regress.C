@@ -23,7 +23,6 @@ int regress(char const* tag, char const* input, char const* output,
     TMVA::Tools::Instance();
 
     std::map<std::string, bool> use;
-    use["BDT"] = true;
     use["BDTG"] = true;
 
     TFile* fout = TFile::Open(output, "recreate");
@@ -91,14 +90,14 @@ int regress(char const* tag, char const* input, char const* output,
              "SplitMode=Random:NormMode=NumEvents:!V",
              nevents));
 
-    if (use["BDT"])
-        factory->BookMethod(
-            loader,
-            TMVA::Types::kBDT,
-            "BDT",
-            "!H:!V:NTrees=1000:MinNodeSize=1.0%:"
-            "BoostType=AdaBoostR2:SeparationType=RegressionVariance:"
-            "nCuts=20:PruneMethod=CostComplexity:PruneStrength=30");
+    /* if (use["BDT"]) */
+    /*     factory->BookMethod( */
+    /*         loader, */
+    /*         TMVA::Types::kBDT, */
+    /*         "BDT", */
+    /*         "!H:!V:NTrees=1000:MinNodeSize=1.0%:" */
+    /*         "BoostType=AdaBoostR2:SeparationType=RegressionVariance:" */
+    /*         "nCuts=20:PruneMethod=CostComplexity:PruneStrength=30"); */
 
     if (use["BDTG"])
         factory->BookMethod(
