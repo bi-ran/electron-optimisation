@@ -372,7 +372,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
             1.2 * std::max(before[0]->GetMaximum(), after[0]->GetMaximum()),
             "Y");
 
-        before[0]->Draw("p same");
+        before[0]->Draw("p");
         after[0]->Draw("p same");
 
         TLegend* l1 = new TLegend(0.6, 0.72, 0.8, 0.84);
@@ -405,7 +405,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
             1.2 * std::max(before[1]->GetMaximum(), after[1]->GetMaximum()),
             "Y");
 
-        before[1]->Draw("p same");
+        before[1]->Draw("p");
         after[1]->Draw("p same");
         before[2]->Draw("p same");
         after[2]->Draw("p same");
