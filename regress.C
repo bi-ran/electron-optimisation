@@ -42,7 +42,7 @@ int regress(char const* tag, char const* input, char const* output,
     loader->AddVariable("eleSeedE5x5/eleSCRawEn", "eleSeedE5x5", "", 'F');
     loader->AddVariable("eleSeedE3x3/eleSCRawEn", "eleSeedE3x3", "", 'F');
     loader->AddVariable("eleHoverE", "eleHoverE", "", 'F');
-    /* loader->AddVariable("eleRho", "eleRho", "", 'F'); */
+    /* loader->AddVariable("rho", "rho", "", 'F'); */
     loader->AddVariable("eledEtaSCSeed", "eledEtaSCSeed", "", 'F');
     loader->AddVariable("eledPhiSCSeed", "eledPhiSCSeed", "", 'F');
     loader->AddVariable("eleSEE", "eleSEE", "", 'F');
@@ -154,7 +154,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
     float r_eleSEE;
     float r_eledPhiSCSeed;
     float r_eledEtaSCSeed;
-    /* float r_eleRho; */
+    /* float r_rho; */
     float r_eleHoverE;
     float r_eleSeedE3x3;
     float r_eleSeedE5x5;
@@ -170,7 +170,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
     reader->AddVariable("eleSeedE5x5/eleSCRawEn", &r_eleSeedE5x5);
     reader->AddVariable("eleSeedE3x3/eleSCRawEn", &r_eleSeedE3x3);
     reader->AddVariable("eleHoverE", &r_eleHoverE);
-    /* reader->AddVariable("eleRho", &r_eleRho); */
+    /* reader->AddVariable("rho", &r_rho); */
     reader->AddVariable("eledEtaSCSeed", &r_eledEtaSCSeed);
     reader->AddVariable("eledPhiSCSeed", &r_eledPhiSCSeed);
     reader->AddVariable("eleSEE", &r_eleSEE);
@@ -233,7 +233,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
     std::vector<float>* eleSEE = 0;
     std::vector<float>* eledPhiSCSeed = 0;
     std::vector<float>* eledEtaSCSeed = 0;
-    /* std::vector<float>* eleRho = 0; */
+    /* float rho = -1; */
     std::vector<float>* eleHoverE = 0;
     std::vector<float>* eleSeedE3x3 = 0;
     std::vector<float>* eleSeedE5x5 = 0;
@@ -258,7 +258,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
     t->SetBranchAddress("eleSeedE5x5", &eleSeedE5x5);
     t->SetBranchAddress("eleSeedE3x3", &eleSeedE3x3);
     t->SetBranchAddress("eleHoverE", &eleHoverE);
-    /* t->SetBranchAddress("eleRho", &eleRho); */
+    /* t->SetBranchAddress("rho", &rho); */
     t->SetBranchAddress("eledEtaSCSeed", &eledEtaSCSeed);
     t->SetBranchAddress("eledPhiSCSeed", &eledPhiSCSeed);
     t->SetBranchAddress("eleSEE", &eleSEE);
@@ -322,7 +322,7 @@ int apply(char const* tag, char const* input, char const* output, int options,
             r_eleSeedE5x5 = (*eleSeedE5x5)[j] / (*eleSCRawEn)[j];
             r_eleSeedE3x3 = (*eleSeedE3x3)[j] / (*eleSCRawEn)[j];
             r_eleHoverE = (*eleHoverE)[j];
-            /* r_eleRho = (*eleRho)[j]; */
+            /* r_rho = rho; */
             r_eledEtaSCSeed = (*eledEtaSCSeed)[j];
             r_eledPhiSCSeed = (*eledPhiSCSeed)[j];
             r_eleSEE = (*eleSEE)[j];

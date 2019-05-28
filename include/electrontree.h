@@ -16,7 +16,7 @@
    ACTION(ULong64_t, event, ## __VA_ARGS__)                             \
    ACTION(UInt_t, lumis, ## __VA_ARGS__)                                \
    ACTION(Int_t, nEle, ## __VA_ARGS__)                                  \
-   ACTION(Float_t, rho, ## __VA_ARGS__)                                 \
+   ACTION(float, rho, ## __VA_ARGS__)                                   \
 
 #define B_VAR_L(ACTION, ...)                                            \
    ACTION(short, nEGs, ## __VA_ARGS__)                                  \
