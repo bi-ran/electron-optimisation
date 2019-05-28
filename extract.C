@@ -160,7 +160,7 @@ int extract(const char* config, const char* output) {
          elet->eledEtaSCSeed->push_back(
             std::abs((*elet->eleSCEta)[j] - (*elet->eleSeedEta)[j]));
          elet->eledPhiSCSeed->push_back(
-            dphi_2s1f1b((*elet->eleSCEta)[j], (*elet->eleSeedEta)[j]));
+            dphi_2s1f1b((*elet->eleSCPhi)[j], (*elet->eleSeedPhi)[j]));
       }
 
       if (hlt_branches) {
