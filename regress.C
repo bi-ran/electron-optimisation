@@ -61,18 +61,27 @@ int passes_looseid_endcap(electrontree* t, int j) {
 }
 
 #define VARIABLES(ACTION)                                               \
-    ACTION(eleSCRawEn, 1, 0, 400)                                       \
-    ACTION(eleSCEtaWidth, 1, 0, 0.04)                                   \
-    ACTION(eleSCPhiWidth, 1, 0, 0.1)                                    \
+    VARIABLES_SIMPLE(ACTION##_SIMPLE)                                   \
+    VARIABLES_NORMED(ACTION##_NORMED)                                   \
+
+#define VARIABLES_SIMPLE(ACTION)                                        \
+    ACTION(eleSCRawEn, 0, 400)                                          \
+    ACTION(eleSCEtaWidth, 0, 0.04)                                      \
+    ACTION(eleSCPhiWidth, 0, 0.1)                                       \
+    ACTION(eleHoverE, 0, 0.1)                                           \
+    ACTION(eledEtaSCSeed, 0, 0.02)                                      \
+    ACTION(eledPhiSCSeed, 0, 0.02)                                      \
+    ACTION(eleSEE, 0, 0.04)                                             \
+    ACTION(eleSEP, 0, 0.8)                                              \
+    ACTION(eleSPP, 0, 0.1)                                              \
+    ACTION(NEcalClusters, 0, 15)                                        \
+    ACTION(eleSeedCryIeta, -50, 50)                                     \
+    ACTION(eleSeedCryIphi, -50, 50)                                     \
+
+#define VARIABLES_NORMED(ACTION)                                        \
     ACTION(eleSeedEn, eleSCRawEn, 0, 400)                               \
     ACTION(eleSeedE5x5, eleSCRawEn, 0, 400)                             \
     ACTION(eleSeedE3x3, eleSCRawEn, 0, 400)                             \
-    ACTION(eleHoverE, 1, 0, 0.1)                                        \
-    ACTION(eledEtaSCSeed, 1, 0, 0.02)                                   \
-    ACTION(eledPhiSCSeed, 1, 0, 0.02)                                   \
-    ACTION(eleSEE, 1, 0, 0.04)                                          \
-    ACTION(eleSEP, 1, 0, 0.8)                                           \
-    ACTION(eleSPP, 1, 0, 0.1)                                           \
     ACTION(eleSeedEMax, eleSeedE5x5, 0, 300)                            \
     ACTION(eleSeedE2nd, eleSeedE5x5, 0, 100)                            \
     ACTION(eleSeedETop, eleSeedE5x5, 0, 100)                            \
@@ -84,29 +93,29 @@ int passes_looseid_endcap(electrontree* t, int j) {
     ACTION(eleSeedE2x5Bottom, eleSeedE5x5, 0, 100)                      \
     ACTION(eleSeedE2x5Left, eleSeedE5x5, 0, 100)                        \
     ACTION(eleSeedE2x5Right, eleSeedE5x5, 0, 100)                       \
-    ACTION(NEcalClusters, 1, 0, 15)                                     \
-    ACTION(eleSeedCryIeta, 1, -50, 50)                                  \
-    ACTION(eleSeedCryIphi, 1, -50, 50)                                  \
 
-#define BACKUP(ACTION)                                                  \
-    ACTION(eleTrkQoverPMode, 1, -10, 10)                                \
-    ACTION(eleTrkPtMode, 1, 0, 100)                                     \
-    ACTION(eleTrkQoverPModeErr, 1, 0, 10)                               \
-    ACTION(eleTrkPtModeErr, 1, 0, 10)                                   \
-    ACTION(eleBrem, 1, 0, 1)                                            \
-    ACTION(eleTrkLayers, 1, 0, 40)                                      \
-    ACTION(eleTrkValidHits, 1, 0, 40)                                   \
-    ACTION(eleTrkNormalizedChi2, 1, 0, 100)
+#define RESERVOIR(ACTION)                                               \
+    ACTION(eleTrkQoverPMode, -10, 10)                                   \
+    ACTION(eleTrkPtMode, 0, 100)                                        \
+    ACTION(eleTrkQoverPModeErr, 0, 10)                                  \
+    ACTION(eleTrkPtModeErr, 0, 10)                                      \
+    ACTION(eleBrem, 0, 1)                                               \
+    ACTION(eleTrkLayers, 0, 40)                                         \
+    ACTION(eleTrkValidHits, 0, 40)                                      \
+    ACTION(eleTrkNormalizedChi2, 0, 100)
 
 int compare(char const* data, char const* sim) {
     TFile* fs = new TFile(sim, "read");
     TTree* ts = (TTree*)fs->Get("electrons");
 
-#define BOOK(var, denom, min, max)                                      \
+#define BOOK_SIMPLE(var, min, max)                                      \
     TH1F* hdb##var = new TH1F("hdb" #var, "", 100, min, max);           \
     TH1F* hde##var = new TH1F("hde" #var, "", 100, min, max);           \
     TH1F* hsb##var = new TH1F("hsb" #var, "", 100, min, max);           \
     TH1F* hse##var = new TH1F("hse" #var, "", 100, min, max);
+
+#define BOOK_NORMED(var, dummy, min, max)                               \
+    BOOK_SIMPLE(var, min, max)
 
     VARIABLES(BOOK)
 
@@ -118,7 +127,11 @@ int compare(char const* data, char const* sim) {
     TCut totalb = match && fiducial && barrel;
     TCut totale = match && fiducial && endcap;
 
-#define DRAW(var, denom, ...)                                           \
+#define DRAW_SIMPLE(var, ...)                                           \
+    ts->Draw(#var ">>hsb" #var, totalb * "ncoll", "goff");              \
+    ts->Draw(#var ">>hse" #var, totale * "ncoll", "goff");
+
+#define DRAW_NORMED(var, denom, ...)                                    \
     ts->Draw(#var "/" #denom ">>hsb" #var, totalb * "ncoll", "goff");   \
     ts->Draw(#var "/" #denom ">>hse" #var, totale * "ncoll", "goff");
 
@@ -138,9 +151,13 @@ int compare(char const* data, char const* sim) {
 
             if (!is_barrel && !is_endcap) { continue; }
 
-#define FILL(var, ...) {                                                \
+#define FILL_SIMPLE(var, ...) {                                         \
     TH1F* h = is_barrel ? hdb##var : hde##var;                          \
     h->Fill((*ed->var)[j]); }
+
+#define FILL_NORMED(var, denom, ...) {                                  \
+    TH1F* h = is_barrel ? hdb##var : hde##var;                          \
+    h->Fill((*ed->var)[j] / (*ed->denom)[j]); }
 
             VARIABLES(FILL);
         }
@@ -148,7 +165,7 @@ int compare(char const* data, char const* sim) {
 
     TCanvas* c1 = new TCanvas("c1", "", 400, 400);
 
-#define PLOT(var, ...)                                                  \
+#define PLOT_SIMPLE(var, ...)                                           \
     {                                                                   \
         hstyle(hdb##var, 20, 40, 0.6);                                  \
         hstyle(hde##var, 21, 46, 0.6);                                  \
@@ -168,6 +185,8 @@ int compare(char const* data, char const* sim) {
                                                                         \
         c1->SaveAs("comp_" #var ".pdf");                                \
     }
+
+#define PLOT_NORMED(var, ...) PLOT_SIMPLE(var)
 
     VARIABLES(PLOT)
 
@@ -190,55 +209,25 @@ int regress(char const* tag, char const* input, char const* output,
 
     TMVA::DataLoader* loader = new TMVA::DataLoader(tag);
 
-    /* loader->AddVariable("eleSCRawEn", "eleSCRawEn", "", 'F'); */
-    loader->AddVariable("eleSCEtaWidth", "eleSCEtaWidth", "", 'F');
-    loader->AddVariable("eleSCPhiWidth", "eleSCPhiWidth", "", 'F');
-    loader->AddVariable("eleSeedEn/eleSCRawEn", "eleSeedEn", "", 'F');
-    loader->AddVariable("eleSeedE5x5/eleSCRawEn", "eleSeedE5x5", "", 'F');
-    loader->AddVariable("eleSeedE3x3/eleSCRawEn", "eleSeedE3x3", "", 'F');
-    loader->AddVariable("eleHoverE", "eleHoverE", "", 'F');
-    /* loader->AddVariable("rho", "rho", "", 'F'); */
-    loader->AddVariable("eledEtaSCSeed", "eledEtaSCSeed", "", 'F');
-    loader->AddVariable("eledPhiSCSeed", "eledPhiSCSeed", "", 'F');
-    loader->AddVariable("eleSEE", "eleSEE", "", 'F');
-    loader->AddVariable("eleSEP", "eleSEP", "", 'F');
-    loader->AddVariable("eleSPP", "eleSPP", "", 'F');
-    loader->AddVariable("eleSeedEMax/eleSeedE5x5", "eleSeedEMax", "", 'F');
-    loader->AddVariable("eleSeedE2nd/eleSeedE5x5", "eleSeedE2nd", "", 'F');
-    loader->AddVariable("eleSeedETop/eleSeedE5x5", "eleSeedETop", "", 'F');
-    loader->AddVariable("eleSeedEBottom/eleSeedE5x5", "eleSeedEBottom", "", 'F');
-    loader->AddVariable("eleSeedELeft/eleSeedE5x5", "eleSeedELeft", "", 'F');
-    loader->AddVariable("eleSeedERight/eleSeedE5x5", "eleSeedERight", "", 'F');
-    loader->AddVariable("eleSeedE2x5Max/eleSeedE5x5", "eleSeedE2x5Max", "", 'F');
-    loader->AddVariable("eleSeedE2x5Top/eleSeedE5x5", "eleSeedE2x5Top", "", 'F');
-    loader->AddVariable("eleSeedE2x5Bottom/eleSeedE5x5", "eleSeedE2x5Bottom", "", 'F');
-    loader->AddVariable("eleSeedE2x5Left/eleSeedE5x5", "eleSeedE2x5Left", "", 'F');
-    loader->AddVariable("eleSeedE2x5Right/eleSeedE5x5", "eleSeedE2x5Right", "", 'F');
-    loader->AddVariable("NEcalClusters", "NEcalClusters", "", 'I');
-    loader->AddVariable("eleSeedCryIeta", "eleSeedCryIeta", "", 'F');
-    loader->AddVariable("eleSeedCryIphi", "eleSeedCryIphi", "", 'F');
-    /* loader->AddVariable("eleTrkQoverPMode", "eleTrkQoverPMode", "", 'F'); */
-    /* loader->AddVariable("eleTrkPtMode", "eleTrkPtMode", "", 'F'); */
-    /* loader->AddVariable("eleTrkQoverPModeErr/eleTrkQoverPMode", "eleTrkQoverPModeErr",  "", 'F'); */
-    /* loader->AddVariable("eleTrkPtModeErr/eleTrkPtMode", "eleTrkPtModeErr", "", 'F'); */
-    /* loader->AddVariable("eleBrem", "eleBrem", "", 'F'); */
-    /* loader->AddVariable("eleTrkLayers", "eleTrkLayers", "", 'I'); */
-    /* loader->AddVariable("eleTrkValidHits", "eleTrkValidHits", "", 'I'); */
-    /* loader->AddVariable("eleTrkNormalizedChi2", "eleTrkNormalizedChi2", "", 'F'); */
+#define LOAD_SIMPLE(var, ...)                                           \
+    loader->AddVariable(#var, #var, "", 'F');
+
+#define LOAD_NORMED(var, denom, ...)                                    \
+    loader->AddVariable(#var "/" #denom, #var, "", 'F');
+
+    VARIABLES(LOAD)
 
     if (options)
         loader->AddVariable("eleESOverRaw", "eleESOverRaw", "", 'F');
 
     loader->AddSpectator("hiBin", "centrality", "", 'I');
-
     loader->AddTarget("eleRefE / (eleSCRawEn + eleESEn)");
+    loader->SetWeightExpression("ncoll");
 
     TFile* f = TFile::Open(input, "read");
     TTree* t = (TTree*)f->Get("electrons");
 
     loader->AddRegressionTree(t, 1.);
-
-    loader->SetWeightExpression("ncoll");
 
     TCut match = "eleGenMatchIndex!=-1";
     TCut fiducial = "elePt>15 && eleTrkPt>5 && mcE>15";
@@ -253,15 +242,6 @@ int regress(char const* tag, char const* input, char const* output,
         Form("nTrain_Regression=%i:nTest_Regression=0:"
              "SplitMode=Random:NormMode=NumEvents:!V",
              nevents));
-
-    /* if (use["BDT"]) */
-    /*     factory->BookMethod( */
-    /*         loader, */
-    /*         TMVA::Types::kBDT, */
-    /*         "BDT", */
-    /*         "!H:!V:NTrees=1000:MinNodeSize=1.0%:" */
-    /*         "BoostType=AdaBoostR2:SeparationType=RegressionVariance:" */
-    /*         "nCuts=20:PruneMethod=CostComplexity:PruneStrength=30"); */
 
     if (use["BDTG"])
         factory->BookMethod(
@@ -297,84 +277,25 @@ int validate(char const* tag, char const* input, char const* output,
 
     TMVA::Reader* reader = new TMVA::Reader("!Color:!Silent");
 
-    float r_eleESOverRaw;
-    /* float r_eleTrkNormalizedChi2; */
-    /* float r_eleTrkValidHits; */
-    /* float r_eleTrkLayers; */
-    /* float r_eleBrem; */
-    /* float r_eleTrkPtModeErr; */
-    /* float r_eleTrkQoverPModeErr; */
-    /* float r_eleTrkPtMode; */
-    /* float r_eleTrkQoverPMode; */
-    float r_eleSeedCryIphi;
-    float r_eleSeedCryIeta;
-    float r_NEcalClusters;
-    float r_eleSeedE2x5Right;
-    float r_eleSeedE2x5Left;
-    float r_eleSeedE2x5Bottom;
-    float r_eleSeedE2x5Top;
-    float r_eleSeedE2x5Max;
-    float r_eleSeedERight;
-    float r_eleSeedELeft;
-    float r_eleSeedEBottom;
-    float r_eleSeedETop;
-    float r_eleSeedE2nd;
-    float r_eleSeedEMax;
-    float r_eleSPP;
-    float r_eleSEP;
-    float r_eleSEE;
-    float r_eledPhiSCSeed;
-    float r_eledEtaSCSeed;
-    /* float r_rho; */
-    float r_eleHoverE;
-    float r_eleSeedE3x3;
-    float r_eleSeedE5x5;
-    float r_eleSeedEn;
-    float r_eleSCPhiWidth;
-    float r_eleSCEtaWidth;
-    /* float r_eleSCRawEn; */
+#define DECLR_SIMPLE(var, ...) float r_##var;
+#define DECLR_NORMED(var, ...) DECLR_SIMPLE(var)
 
-    /* reader->AddVariable("eleSCRawEn", &r_eleSCRawEn); */
-    reader->AddVariable("eleSCEtaWidth", &r_eleSCEtaWidth);
-    reader->AddVariable("eleSCPhiWidth", &r_eleSCPhiWidth);
-    reader->AddVariable("eleSeedEn/eleSCRawEn", &r_eleSeedEn);
-    reader->AddVariable("eleSeedE5x5/eleSCRawEn", &r_eleSeedE5x5);
-    reader->AddVariable("eleSeedE3x3/eleSCRawEn", &r_eleSeedE3x3);
-    reader->AddVariable("eleHoverE", &r_eleHoverE);
-    /* reader->AddVariable("rho", &r_rho); */
-    reader->AddVariable("eledEtaSCSeed", &r_eledEtaSCSeed);
-    reader->AddVariable("eledPhiSCSeed", &r_eledPhiSCSeed);
-    reader->AddVariable("eleSEE", &r_eleSEE);
-    reader->AddVariable("eleSEP", &r_eleSEP);
-    reader->AddVariable("eleSPP", &r_eleSPP);
-    reader->AddVariable("eleSeedEMax/eleSeedE5x5", &r_eleSeedEMax);
-    reader->AddVariable("eleSeedE2nd/eleSeedE5x5", &r_eleSeedE2nd);
-    reader->AddVariable("eleSeedETop/eleSeedE5x5", &r_eleSeedETop);
-    reader->AddVariable("eleSeedEBottom/eleSeedE5x5", &r_eleSeedEBottom);
-    reader->AddVariable("eleSeedELeft/eleSeedE5x5", &r_eleSeedELeft);
-    reader->AddVariable("eleSeedERight/eleSeedE5x5", &r_eleSeedERight);
-    reader->AddVariable("eleSeedE2x5Max/eleSeedE5x5", &r_eleSeedE2x5Max);
-    reader->AddVariable("eleSeedE2x5Top/eleSeedE5x5", &r_eleSeedE2x5Top);
-    reader->AddVariable("eleSeedE2x5Bottom/eleSeedE5x5", &r_eleSeedE2x5Bottom);
-    reader->AddVariable("eleSeedE2x5Left/eleSeedE5x5", &r_eleSeedE2x5Left);
-    reader->AddVariable("eleSeedE2x5Right/eleSeedE5x5", &r_eleSeedE2x5Right);
-    reader->AddVariable("NEcalClusters", &r_NEcalClusters);
-    reader->AddVariable("eleSeedCryIeta", &r_eleSeedCryIeta);
-    reader->AddVariable("eleSeedCryIphi", &r_eleSeedCryIphi);
-    /* reader->AddVariable("eleTrkQoverPMode", &r_eleTrkQoverPMode); */
-    /* reader->AddVariable("eleTrkPtMode", &r_eleTrkPtMode); */
-    /* reader->AddVariable("eleTrkQoverPModeErr/eleTrkQoverPMode", &r_eleTrkQoverPModeErr); */
-    /* reader->AddVariable("eleTrkPtModeErr/eleTrkPtMode", &r_eleTrkPtModeErr); */
-    /* reader->AddVariable("eleBrem", &r_eleBrem); */
-    /* reader->AddVariable("eleTrkLayers", &r_eleTrkLayers); */
-    /* reader->AddVariable("eleTrkValidHits", &r_eleTrkValidHits); */
-    /* reader->AddVariable("eleTrkNormalizedChi2", &r_eleTrkNormalizedChi2); */
+    VARIABLES(DECLR)
+
+    float r_eleESOverRaw;
+
+#define READ_SIMPLE(var, ...)                                           \
+    reader->AddVariable(#var, &r_##var);
+
+#define READ_NORMED(var, denom, ...)                                    \
+    reader->AddVariable(#var "/" #denom, &r_##var);
+
+    VARIABLES(READ)
 
     if (options)
         reader->AddVariable("eleESOverRaw", &r_eleESOverRaw);
 
     int hiBin;
-
     reader->AddSpectator("hiBin", &hiBin);
 
     reader->BookMVA(
@@ -386,8 +307,6 @@ int validate(char const* tag, char const* input, char const* output,
 
     TFile* fout = new TFile(output, "update");
 
-    char const* title = ";#deltaE/E;";
-
     std::vector<int> clow  = {   0,  0, 20,  60, 100 };
     std::vector<int> chigh = { 200, 20, 60, 100, 200 };
     int ncent = clow.size();
@@ -395,6 +314,7 @@ int validate(char const* tag, char const* input, char const* output,
     TH1F* before[ncent];
     TH1F* after[ncent];
 
+    char const* title = ";#deltaE/E;";
     for (int c = 0; c < ncent; ++c) {
         before[c] = new TH1F(Form("before_%s_c%i", tag, c), title, 100, -0.4, 0.4);
         after[c] = new TH1F(Form("after_%s_c%i", tag, c), title, 100, -0.4, 0.4);
@@ -417,42 +337,10 @@ int validate(char const* tag, char const* input, char const* output,
             if (options && ((std::abs((*e->eleSCEta)[j]) < 1.566)
                 || (std::abs((*e->eleSCEta)[j]) > 2.5))) { continue; }
 
-            /* r_eleSCRawEn = (*e->eleSCRawEn)[j]; */
-            r_eleSCEtaWidth = (*e->eleSCEtaWidth)[j];
-            r_eleSCPhiWidth = (*e->eleSCPhiWidth)[j];
-            r_eleSeedEn = (*e->eleSeedEn)[j] / (*e->eleSCRawEn)[j];
-            r_eleSeedE5x5 = (*e->eleSeedE5x5)[j] / (*e->eleSCRawEn)[j];
-            r_eleSeedE3x3 = (*e->eleSeedE3x3)[j] / (*e->eleSCRawEn)[j];
-            r_eleHoverE = (*e->eleHoverE)[j];
-            /* r_rho = e->rho; */
-            r_eledEtaSCSeed = (*e->eledEtaSCSeed)[j];
-            r_eledPhiSCSeed = (*e->eledPhiSCSeed)[j];
-            r_eleSEE = (*e->eleSEE)[j];
-            r_eleSEP = (*e->eleSEP)[j];
-            r_eleSPP = (*e->eleSPP)[j];
-            r_eleSeedEMax = (*e->eleSeedEMax)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2nd = (*e->eleSeedE2nd)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedETop = (*e->eleSeedETop)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedEBottom = (*e->eleSeedEBottom)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedELeft = (*e->eleSeedELeft)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedERight = (*e->eleSeedERight)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Max = (*e->eleSeedE2x5Max)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Top = (*e->eleSeedE2x5Top)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Bottom = (*e->eleSeedE2x5Bottom)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Left = (*e->eleSeedE2x5Left)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Right = (*e->eleSeedE2x5Right)[j] / (*e->eleSeedE5x5)[j];
-            r_NEcalClusters = (*e->NEcalClusters)[j];
-            r_eleSeedCryIeta = (*e->eleSeedCryIeta)[j];
-            r_eleSeedCryIphi = (*e->eleSeedCryIphi)[j];
-            r_eleESOverRaw = (*e->eleESOverRaw)[j];
-            /* r_eleTrkQoverPMode = (*e->eleTrkQoverPMode)[j]; */
-            /* r_eleTrkPtMode = (*e->eleTrkPtMode)[j]; */
-            /* r_eleTrkQoverPModeErr = (*e->eleTrkQoverPModeErr)[j] / (*e->eleTrkQoverPMode)[j]; */
-            /* r_eleTrkPtModeErr = (*e->eleTrkPtModeErr)[j] / (*e->eleTrkPtMode)[j]; */
-            /* r_eleBrem = (*e->eleBrem)[j]; */
-            /* r_eleTrkLayers = (*e->eleTrkLayers)[j]; */
-            /* r_eleTrkValidHits = (*e->eleTrkValidHits)[j]; */
-            /* r_eleTrkNormalizedChi2 = (*e->eleTrkNormalizedChi2)[j]; */
+#define VALUE_SIMPLE(var, ...) r_##var = (*e->var)[j];
+#define VALUE_NORMED(var, denom, ...) r_##var = (*e->var)[j] / (*e->denom)[j];
+
+            VARIABLES(VALUE)
 
             float val = (reader->EvaluateRegression(Form("%s", method)))[0];
             float truth = (*e->mcE)[(*e->eleGenMatchIndex)[j]];
@@ -552,88 +440,28 @@ int apply(char const* tag, char const* input, char const* method) {
     TMVA::Reader* breader = new TMVA::Reader("!Color:!Silent");
     TMVA::Reader* ereader = new TMVA::Reader("!Color:!Silent");
 
+    VARIABLES(DECLR)
+
     float r_eleESOverRaw;
-    /* float r_eleTrkNormalizedChi2; */
-    /* float r_eleTrkValidHits; */
-    /* float r_eleTrkLayers; */
-    /* float r_eleBrem; */
-    /* float r_eleTrkPtModeErr; */
-    /* float r_eleTrkQoverPModeErr; */
-    /* float r_eleTrkPtMode; */
-    /* float r_eleTrkQoverPMode; */
-    float r_eleSeedCryIphi;
-    float r_eleSeedCryIeta;
-    float r_NEcalClusters;
-    float r_eleSeedE2x5Right;
-    float r_eleSeedE2x5Left;
-    float r_eleSeedE2x5Bottom;
-    float r_eleSeedE2x5Top;
-    float r_eleSeedE2x5Max;
-    float r_eleSeedERight;
-    float r_eleSeedELeft;
-    float r_eleSeedEBottom;
-    float r_eleSeedETop;
-    float r_eleSeedE2nd;
-    float r_eleSeedEMax;
-    float r_eleSPP;
-    float r_eleSEP;
-    float r_eleSEE;
-    float r_eledPhiSCSeed;
-    float r_eledEtaSCSeed;
-    /* float r_rho; */
-    float r_eleHoverE;
-    float r_eleSeedE3x3;
-    float r_eleSeedE5x5;
-    float r_eleSeedEn;
-    float r_eleSCPhiWidth;
-    float r_eleSCEtaWidth;
-    /* float r_eleSCRawEn; */
 
-#define READER_ADD_VAR(reader)                                                          \
-    reader->AddVariable("eleSCEtaWidth", &r_eleSCEtaWidth);                             \
-    reader->AddVariable("eleSCPhiWidth", &r_eleSCPhiWidth);                             \
-    reader->AddVariable("eleSeedEn/eleSCRawEn", &r_eleSeedEn);                          \
-    reader->AddVariable("eleSeedE5x5/eleSCRawEn", &r_eleSeedE5x5);                      \
-    reader->AddVariable("eleSeedE3x3/eleSCRawEn", &r_eleSeedE3x3);                      \
-    reader->AddVariable("eleHoverE", &r_eleHoverE);                                     \
-    /* reader->AddVariable("rho", &r_rho); */                                           \
-    reader->AddVariable("eledEtaSCSeed", &r_eledEtaSCSeed);                             \
-    reader->AddVariable("eledPhiSCSeed", &r_eledPhiSCSeed);                             \
-    reader->AddVariable("eleSEE", &r_eleSEE);                                           \
-    reader->AddVariable("eleSEP", &r_eleSEP);                                           \
-    reader->AddVariable("eleSPP", &r_eleSPP);                                           \
-    reader->AddVariable("eleSeedEMax/eleSeedE5x5", &r_eleSeedEMax);                     \
-    reader->AddVariable("eleSeedE2nd/eleSeedE5x5", &r_eleSeedE2nd);                     \
-    reader->AddVariable("eleSeedETop/eleSeedE5x5", &r_eleSeedETop);                     \
-    reader->AddVariable("eleSeedEBottom/eleSeedE5x5", &r_eleSeedEBottom);               \
-    reader->AddVariable("eleSeedELeft/eleSeedE5x5", &r_eleSeedELeft);                   \
-    reader->AddVariable("eleSeedERight/eleSeedE5x5", &r_eleSeedERight);                 \
-    reader->AddVariable("eleSeedE2x5Max/eleSeedE5x5", &r_eleSeedE2x5Max);               \
-    reader->AddVariable("eleSeedE2x5Top/eleSeedE5x5", &r_eleSeedE2x5Top);               \
-    reader->AddVariable("eleSeedE2x5Bottom/eleSeedE5x5", &r_eleSeedE2x5Bottom);         \
-    reader->AddVariable("eleSeedE2x5Left/eleSeedE5x5", &r_eleSeedE2x5Left);             \
-    reader->AddVariable("eleSeedE2x5Right/eleSeedE5x5", &r_eleSeedE2x5Right);           \
-    reader->AddVariable("NEcalClusters", &r_NEcalClusters);                             \
-    reader->AddVariable("eleSeedCryIeta", &r_eleSeedCryIeta);                           \
-    reader->AddVariable("eleSeedCryIphi", &r_eleSeedCryIphi);                           \
+#define BREAD_SIMPLE(var, ...)                                          \
+    breader->AddVariable(#var, &r_##var);
 
-#define TMP                                                                             \
-    reader->AddVariable("eleSCRawEn", &r_eleSCRawEn);                                   \
-    reader->AddVariable("eleTrkQoverPMode", &r_eleTrkQoverPMode);                       \
-    reader->AddVariable("eleTrkPtMode", &r_eleTrkPtMode);                               \
-    reader->AddVariable("eleTrkQoverPModeErr/eleTrkQoverPMode", &r_eleTrkQoverPModeErr);\
-    reader->AddVariable("eleTrkPtModeErr/eleTrkPtMode", &r_eleTrkPtModeErr);            \
-    reader->AddVariable("eleBrem", &r_eleBrem);                                         \
-    reader->AddVariable("eleTrkLayers", &r_eleTrkLayers);                               \
-    reader->AddVariable("eleTrkValidHits", &r_eleTrkValidHits);                         \
-    reader->AddVariable("eleTrkNormalizedChi2", &r_eleTrkNormalizedChi2);
+#define BREAD_NORMED(var, denom, ...)                                   \
+    breader->AddVariable(#var "/" #denom, &r_##var);
 
-    READER_ADD_VAR(breader)
-    READER_ADD_VAR(ereader)
+#define EREAD_SIMPLE(var, ...)                                          \
+    ereader->AddVariable(#var, &r_##var);
+
+#define EREAD_NORMED(var, denom, ...)                                   \
+    ereader->AddVariable(#var "/" #denom, &r_##var);
+
+    VARIABLES(BREAD)
+    VARIABLES(EREAD)
+
     ereader->AddVariable("eleESOverRaw", &r_eleESOverRaw);
 
     int hiBin;
-
     breader->AddSpectator("hiBin", &hiBin);
     ereader->AddSpectator("hiBin", &hiBin);
 
@@ -685,42 +513,9 @@ int apply(char const* tag, char const* input, char const* method) {
             float eta = std::abs((*e->eleSCEta)[j]);
             if ((eta > 1.442 && eta < 1.566) || eta > 2.5) { continue; }
 
-            /* r_eleSCRawEn = (*e->eleSCRawEn)[j]; */
-            r_eleSCEtaWidth = (*e->eleSCEtaWidth)[j];
-            r_eleSCPhiWidth = (*e->eleSCPhiWidth)[j];
-            r_eleSeedEn = (*e->eleSeedEn)[j] / (*e->eleSCRawEn)[j];
-            r_eleSeedE5x5 = (*e->eleSeedE5x5)[j] / (*e->eleSCRawEn)[j];
-            r_eleSeedE3x3 = (*e->eleSeedE3x3)[j] / (*e->eleSCRawEn)[j];
-            r_eleHoverE = (*e->eleHoverE)[j];
-            /* r_rho = e->rho; */
-            r_eledEtaSCSeed = (*e->eledEtaSCSeed)[j];
-            r_eledPhiSCSeed = (*e->eledPhiSCSeed)[j];
-            r_eleSEE = (*e->eleSEE)[j];
-            r_eleSEP = (*e->eleSEP)[j];
-            r_eleSPP = (*e->eleSPP)[j];
-            r_eleSeedEMax = (*e->eleSeedEMax)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2nd = (*e->eleSeedE2nd)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedETop = (*e->eleSeedETop)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedEBottom = (*e->eleSeedEBottom)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedELeft = (*e->eleSeedELeft)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedERight = (*e->eleSeedERight)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Max = (*e->eleSeedE2x5Max)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Top = (*e->eleSeedE2x5Top)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Bottom = (*e->eleSeedE2x5Bottom)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Left = (*e->eleSeedE2x5Left)[j] / (*e->eleSeedE5x5)[j];
-            r_eleSeedE2x5Right = (*e->eleSeedE2x5Right)[j] / (*e->eleSeedE5x5)[j];
-            r_NEcalClusters = (*e->NEcalClusters)[j];
-            r_eleSeedCryIeta = (*e->eleSeedCryIeta)[j];
-            r_eleSeedCryIphi = (*e->eleSeedCryIphi)[j];
+            VARIABLES(VALUE)
+
             r_eleESOverRaw = (*e->eleESOverRaw)[j];
-            /* r_eleTrkQoverPMode = (*e->eleTrkQoverPMode)[j]; */
-            /* r_eleTrkPtMode = (*e->eleTrkPtMode)[j]; */
-            /* r_eleTrkQoverPModeErr = (*e->eleTrkQoverPModeErr)[j] / (*e->eleTrkQoverPMode)[j]; */
-            /* r_eleTrkPtModeErr = (*e->eleTrkPtModeErr)[j] / (*e->eleTrkPtMode)[j]; */
-            /* r_eleBrem = (*e->eleBrem)[j]; */
-            /* r_eleTrkLayers = (*e->eleTrkLayers)[j]; */
-            /* r_eleTrkValidHits = (*e->eleTrkValidHits)[j]; */
-            /* r_eleTrkNormalizedChi2 = (*e->eleTrkNormalizedChi2)[j]; */
 
             TMVA::Reader* reader = eta < 1.442 ? breader : ereader;
             float val = (reader->EvaluateRegression(Form("%s", method)))[0];
