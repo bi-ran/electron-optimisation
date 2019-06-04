@@ -48,7 +48,7 @@ class l1tree {
       void read(TTree* t) {
          if (l1_branches) {
             B_AVL_L(RREF, t)
-            B_ARL_L(RVAR, t) }
+            B_ARL_L(RREF, t) }
       };
 
       B_AVL_L(DECLARE)
