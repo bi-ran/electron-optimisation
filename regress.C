@@ -60,62 +60,69 @@ int passes_looseid_endcap(electrontree* t, int j) {
         && (*t->eleMissHits)[j] < 2);
 }
 
+int within_hem_failure_region(electrontree* t, int j) {
+    return ((*t->eleSCEta)[j] < -1.39
+        && (*t->eleSCPhi)[j] < -0.9
+        && (*t->eleSCPhi)[j] > -1.6);
+}
+
 #define VARIABLES(ACTION)                                               \
     VARIABLES_SIMPLE(ACTION##_SIMPLE)                                   \
     VARIABLES_NORMED(ACTION##_NORMED)                                   \
 
 #define VARIABLES_SIMPLE(ACTION)                                        \
-    ACTION(eleSCRawEn, 0, 400)                                          \
-    ACTION(eleSCEtaWidth, 0, 0.04)                                      \
-    ACTION(eleSCPhiWidth, 0, 0.1)                                       \
-    ACTION(eleHoverE, 0, 0.1)                                           \
-    ACTION(eledEtaSCSeed, 0, 0.02)                                      \
-    ACTION(eledPhiSCSeed, 0, 0.02)                                      \
-    ACTION(eleSEE, 0, 0.04)                                             \
-    ACTION(eleSEP, 0, 0.8)                                              \
-    ACTION(eleSPP, 0, 0.1)                                              \
-    ACTION(NEcalClusters, 0, 15)                                        \
-    ACTION(eleSeedCryIeta, -50, 50)                                     \
-    ACTION(eleSeedCryIphi, -50, 50)                                     \
+    ACTION(eleSCEtaWidth, 0, 0, 0.04)                                   \
+    ACTION(eleSCPhiWidth, 0, 0, 0.1)                                    \
+    ACTION(eleHoverE, 0, 0, 0.1)                                        \
+    ACTION(eledEtaSCSeed, 0, 0, 0.02)                                   \
+    ACTION(eledPhiSCSeed, 0, 0, 0.02)                                   \
+    ACTION(eleSEE, 0, 0, 0.04)                                          \
+    ACTION(eleSEP, 0, 0, 0.8)                                           \
+    ACTION(eleSPP, 0, 0, 0.1)                                           \
+    ACTION(NEcalClusters, 0, 0, 15)                                     \
+    ACTION(eleSeedCryIeta, 0, -100, 100)                                \
+    ACTION(eleBrem, 0, 0, 1)                                            \
+    ACTION(eleTrkLayers, 0, 0, 40)                                      \
+    ACTION(eleTrkValidHits, 0, 0, 40)                                   \
 
 #define VARIABLES_NORMED(ACTION)                                        \
-    ACTION(eleSeedEn, eleSCRawEn, 0, 400)                               \
-    ACTION(eleSeedE5x5, eleSCRawEn, 0, 400)                             \
-    ACTION(eleSeedE3x3, eleSCRawEn, 0, 400)                             \
-    ACTION(eleSeedEMax, eleSeedE5x5, 0, 300)                            \
-    ACTION(eleSeedE2nd, eleSeedE5x5, 0, 100)                            \
-    ACTION(eleSeedETop, eleSeedE5x5, 0, 100)                            \
-    ACTION(eleSeedEBottom, eleSeedE5x5, 0, 100)                         \
-    ACTION(eleSeedELeft, eleSeedE5x5, 0, 100)                           \
-    ACTION(eleSeedERight, eleSeedE5x5, 0, 100)                          \
-    ACTION(eleSeedE2x5Max, eleSeedE5x5, 0, 400)                         \
-    ACTION(eleSeedE2x5Top, eleSeedE5x5, 0, 100)                         \
-    ACTION(eleSeedE2x5Bottom, eleSeedE5x5, 0, 100)                      \
-    ACTION(eleSeedE2x5Left, eleSeedE5x5, 0, 100)                        \
-    ACTION(eleSeedE2x5Right, eleSeedE5x5, 0, 100)                       \
+    ACTION(eleESEn, eleSCRawEn, 1, 0, 0.1)                              \
+    ACTION(eleSeedE5x5, eleSCRawEn, 0, 0, 1)                            \
+    ACTION(eleSeedE3x3, eleSCRawEn, 0, 0, 1)                            \
+    ACTION(eleSeedEMax, eleSeedE5x5, 0, 0, 1)                           \
+    ACTION(eleSeedE2nd, eleSeedE5x5, 0, 0, 1)                           \
+    ACTION(eleSeedE2x5Max, eleSeedE5x5, 0, 0, 1)                        \
 
 #define RESERVOIR(ACTION)                                               \
-    ACTION(eleTrkQoverPMode, -10, 10)                                   \
-    ACTION(eleTrkPtMode, 0, 100)                                        \
-    ACTION(eleTrkQoverPModeErr, 0, 10)                                  \
-    ACTION(eleTrkPtModeErr, 0, 10)                                      \
-    ACTION(eleBrem, 0, 1)                                               \
-    ACTION(eleTrkLayers, 0, 40)                                         \
-    ACTION(eleTrkValidHits, 0, 40)                                      \
-    ACTION(eleTrkNormalizedChi2, 0, 100)
+    ACTION(eleSCRawEn, 0, 0, 400)                                       \
+    ACTION(eleSeedCryIphi, 0, 0, 100)                                   \
+    ACTION(eleTrkPtMode, 0, 0, 100)                                     \
+    ACTION(eleTrkPtModeErr, 0, 0, 10)                                   \
+    ACTION(eleTrkQoverPMode, 0, -10, 10)                                \
+    ACTION(eleTrkQoverPModeErr, 0, 0, 10)                               \
+    ACTION(eleTrkNormalizedChi2, 0, 0, 100)                             \
+    ACTION(eleSeedEn, eleSCRawEn, 0, 0, 1)                              \
+    ACTION(eleSeedETop, eleSeedE5x5, 0, 0, 1)                           \
+    ACTION(eleSeedEBottom, eleSeedE5x5, 0, 0, 1)                        \
+    ACTION(eleSeedELeft, eleSeedE5x5, 0, 0, 1)                          \
+    ACTION(eleSeedERight, eleSeedE5x5, 0, 0, 1)                         \
+    ACTION(eleSeedE2x5Top, eleSeedE5x5, 0, 0, 1)                        \
+    ACTION(eleSeedE2x5Bottom, eleSeedE5x5, 0, 0, 1)                     \
+    ACTION(eleSeedE2x5Left, eleSeedE5x5, 0, 0, 1)                       \
+    ACTION(eleSeedE2x5Right, eleSeedE5x5, 0, 0, 1)                      \
 
 int compare(char const* data, char const* sim) {
     TFile* fs = new TFile(sim, "read");
     TTree* ts = (TTree*)fs->Get("electrons");
 
-#define BOOK_SIMPLE(var, min, max)                                      \
+#define BOOK_SIMPLE(var, dummy, min, max)                               \
     TH1F* hdb##var = new TH1F("hdb" #var, "", 100, min, max);           \
     TH1F* hde##var = new TH1F("hde" #var, "", 100, min, max);           \
     TH1F* hsb##var = new TH1F("hsb" #var, "", 100, min, max);           \
     TH1F* hse##var = new TH1F("hse" #var, "", 100, min, max);
 
-#define BOOK_NORMED(var, dummy, min, max)                               \
-    BOOK_SIMPLE(var, min, max)
+#define BOOK_NORMED(var, expr, dummy, min, max)                         \
+    BOOK_SIMPLE(var, dummy, min, max)
 
     VARIABLES(BOOK)
 
@@ -146,6 +153,8 @@ int compare(char const* data, char const* sim) {
         td->GetEntry(i);
 
         for (int j = 0; j < ed->nEle; ++j) {
+            if (within_hem_failure_region(ed, j)) { continue; }
+
             bool is_barrel = passes_looseid_barrel(ed, j);
             bool is_endcap = passes_looseid_endcap(ed, j);
 
@@ -209,16 +218,15 @@ int regress(char const* tag, char const* input, char const* output,
 
     TMVA::DataLoader* loader = new TMVA::DataLoader(tag);
 
-#define LOAD_SIMPLE(var, ...)                                           \
-    loader->AddVariable(#var, #var, "", 'F');
+#define LOAD_SIMPLE(var, region, ...)                                   \
+    if (!region || (region && options)) {                               \
+        loader->AddVariable(#var, #var, "", 'F'); }
 
-#define LOAD_NORMED(var, denom, ...)                                    \
-    loader->AddVariable(#var "/" #denom, #var, "", 'F');
+#define LOAD_NORMED(var, denom, region, ...)                            \
+    if (!region || (region && options)) {                               \
+        loader->AddVariable(#var "/" #denom, #var, "", 'F'); }
 
     VARIABLES(LOAD)
-
-    if (options)
-        loader->AddVariable("eleESOverRaw", "eleESOverRaw", "", 'F');
 
     loader->AddSpectator("hiBin", "centrality", "", 'I');
     loader->AddTarget("eleRefE / (eleSCRawEn + eleESEn)");
@@ -282,18 +290,15 @@ int validate(char const* tag, char const* input, char const* output,
 
     VARIABLES(DECLR)
 
-    float r_eleESOverRaw;
+#define READ_SIMPLE(var, region, ...)                                   \
+    if (!region || (region && options)) {                               \
+        reader->AddVariable(#var, &r_##var); }
 
-#define READ_SIMPLE(var, ...)                                           \
-    reader->AddVariable(#var, &r_##var);
-
-#define READ_NORMED(var, denom, ...)                                    \
-    reader->AddVariable(#var "/" #denom, &r_##var);
+#define READ_NORMED(var, denom, region, ...)                            \
+    if (!region || (region && options)) {                               \
+        reader->AddVariable(#var "/" #denom, &r_##var); }
 
     VARIABLES(READ)
-
-    if (options)
-        reader->AddVariable("eleESOverRaw", &r_eleESOverRaw);
 
     int hiBin;
     reader->AddSpectator("hiBin", &hiBin);
@@ -303,7 +308,7 @@ int validate(char const* tag, char const* input, char const* output,
 
     TFile* f = new TFile(input, "read");
     TTree* t = (TTree*)f->Get("electrons");
-    auto e = new electrontree(0, 0, 0, t);
+    auto e = new electrontree(1, 0, 0, t);
 
     TFile* fout = new TFile(output, "update");
 
@@ -442,13 +447,11 @@ int apply(char const* tag, char const* input, char const* method) {
 
     VARIABLES(DECLR)
 
-    float r_eleESOverRaw;
+#define BREAD_SIMPLE(var, region, ...)                                  \
+    if (!region) { breader->AddVariable(#var, &r_##var); }
 
-#define BREAD_SIMPLE(var, ...)                                          \
-    breader->AddVariable(#var, &r_##var);
-
-#define BREAD_NORMED(var, denom, ...)                                   \
-    breader->AddVariable(#var "/" #denom, &r_##var);
+#define BREAD_NORMED(var, denom, region, ...)                           \
+    if (!region) { breader->AddVariable(#var "/" #denom, &r_##var); }
 
 #define EREAD_SIMPLE(var, ...)                                          \
     ereader->AddVariable(#var, &r_##var);
@@ -458,8 +461,6 @@ int apply(char const* tag, char const* input, char const* method) {
 
     VARIABLES(BREAD)
     VARIABLES(EREAD)
-
-    ereader->AddVariable("eleESOverRaw", &r_eleESOverRaw);
 
     int hiBin;
     breader->AddSpectator("hiBin", &hiBin);
@@ -514,8 +515,6 @@ int apply(char const* tag, char const* input, char const* method) {
             if ((eta > 1.442 && eta < 1.566) || eta > 2.5) { continue; }
 
             VARIABLES(VALUE)
-
-            r_eleESOverRaw = (*e->eleESOverRaw)[j];
 
             TMVA::Reader* reader = eta < 1.442 ? breader : ereader;
             float val = (reader->EvaluateRegression(Form("%s", method)))[0];
